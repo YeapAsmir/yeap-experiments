@@ -2,7 +2,7 @@ import React, { JSX } from 'react';
 
 type JSONBeautifierOptions = {
   indentSize?: number;
-  colorScheme?: 'light' | 'dark' | 'monokai';
+  colorScheme?: 'light' | 'dark' | 'monokai' | 'customDark';
 };
 
 /**
@@ -55,6 +55,17 @@ export const useJSONBeautifier = (
       punctuation: '#f8f8f2',
       background: '#272822',
       text: '#f8f8f2',
+    },
+    customDark: {
+      key: '#4fc3f7',        // bleu clair pour les clés
+      string: '#ffffff',     // blanc pur pour les chaînes
+      number: '#81d4fa',     // bleu pastel pour les nombres
+      boolean: '#29b6f6',    // bleu vif pour les booléens
+      null: '#90a4ae',       // gris bleuté pour null
+      bracket: '#b0bec5',    // gris clair pour crochets et accolades
+      punctuation: '#eceff1',// blanc cassé pour ponctuation
+      background: '#0d1117', // fond noir profond
+      text: '#e0f7fa',       // texte blanc bleuté
     }
   };
 
