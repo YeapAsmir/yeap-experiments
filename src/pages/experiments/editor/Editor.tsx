@@ -1,3 +1,4 @@
+/* eslint-disable no-template-curly-in-string */
 import React, { useState, useRef, useEffect } from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
@@ -16,10 +17,9 @@ import { AutocompletionUI } from './components/AutocompletionUI';
 import { InfoBar } from './components/InfoBar';
 import { CompletionState } from './types';
 import { getDocumentation } from './utils';
-import './style.css';
 
 const allSuggestions = [
-  snippetCompletion(`si(\${1:condition}; \${2:valeur_si_vrai}; \${3:valeur_si_faux})`, {
+  snippetCompletion('si(${1:condition}; ${2:valeur_si_vrai}; ${3:valeur_si_faux})', {
     label: 'si',
     type: 'function',
     detail: 'Évalue une condition et retourne une valeur selon le résultat',
@@ -30,22 +30,22 @@ const allSuggestions = [
     type: 'function',
     detail: 'Retourne la valeur de base selon le diplôme',
   }),
-  snippetCompletion('siNull(\${1:valeur}; \${2:valeur_alternative})', {
+  snippetCompletion('siNull(${1:valeur}; ${2:valeur_alternative})', {
     label: 'siNull',
     type: 'function',
     detail: 'Vérifie si une valeur est nulle et retourne une valeur alternative',
   }),
-  snippetCompletion('somme(\${1:valeur1}; \${2:valeur2}; \${3:...})', {
+  snippetCompletion('somme(${1:valeur1}; ${2:valeur2}; ${3:...})', {
     label: 'somme',
     type: 'function',
     detail: 'Calcule la somme de plusieurs valeurs',
   }),
-  snippetCompletion('moyenne(\${1:valeur1}; \${2:valeur2}; \${3:...})', {
+  snippetCompletion('moyenne(${1:valeur1}; ${2:valeur2}; ${3:...})', {
     label: 'moyenne',
     type: 'function',
     detail: 'Calcule la moyenne de plusieurs valeurs',
   }),
-  snippetCompletion('arrondi(\${1:nombre}; \${2:decimales})', {
+  snippetCompletion('arrondi(${1:nombre}; ${2:decimales})', {
     label: 'arrondi',
     type: 'function',
     detail: 'Arrondit un nombre au nombre de décimales spécifié',
@@ -144,8 +144,8 @@ interface EditorProps {
 }
 
 export default function PayrollEditorCustomUI({
-  showSearchInput = false,
-  showCategories = false,
+  showSearchInput = true,
+  showCategories = true,
   showInfoBar = false
 }: EditorProps) {
   const [value, setValue] = useState('// Je suis un petit commentaire');
