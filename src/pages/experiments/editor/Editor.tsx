@@ -1,12 +1,13 @@
 /* eslint-disable no-template-curly-in-string */
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
-import { autocompletion, snippetCompletion, CompletionContext, completionStatus, Completion } from "@codemirror/autocomplete";
+import { autocompletion, snippetCompletion, CompletionContext, completionStatus, Completion, nextSnippetField, prevSnippetField, clearSnippet } from "@codemirror/autocomplete";
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { EditorView, keymap, ViewPlugin } from "@codemirror/view";
 import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
 import { StateField } from "@codemirror/state";
+import { espresso } from "thememirror";
 import { AutocompletionUI } from "./components/AutocompletionUI";
 import { InfoBar } from "./components/InfoBar";
 import { CompletionState } from "./types";
@@ -74,6 +75,76 @@ const allSuggestions = [
     type: "operator",
     detail: "Différent",
   }),
+  snippetCompletion("concat(${1:texte1}; ${2:texte2}; ${3:...})", {
+    label: "concat",
+    type: "function",
+    detail: "Concatène plusieurs chaînes de caractères",
+  }),
+  snippetCompletion("multiplePar(${1:montant}; ${2:coefficient})", {
+    label: "multiplePar",
+    type: "function",
+    detail: "Multiplie par un coefficient selon le diplôme",
+  }),
+  snippetCompletion("anneesDiplome(${1:dateObtention})", {
+    label: "anneesDiplome",
+    type: "function",
+    detail: "Années écoulées depuis l'obtention du diplôme",
+  }),
+  snippetCompletion("majoration(${1:montant}; ${2:pourcentage})", {
+    label: "majoration",
+    type: "function",
+    detail: "Applique une majoration selon l'ancienneté",
+  }),
+  snippetCompletion("niveauDiplome()", {
+    label: "niveauDiplome",
+    type: "function",
+    detail: "Niveau du diplôme (I à V)",
+  }),
+  snippetCompletion("plafond(${1:valeur}; ${2:maximum})", {
+    label: "plafond",
+    type: "function",
+    detail: "Limite une valeur à un maximum",
+  }),
+  snippetCompletion("plancher(${1:valeur}; ${2:minimum})", {
+    label: "plancher",
+    type: "function",
+    detail: "Assure qu'une valeur ne soit pas inférieure à un minimum",
+  }),
+  snippetCompletion("appartientA(${1:valeur}; ${2:valeur1}; ${3:valeur2}; ${4:...})", {
+    label: "appartientA",
+    type: "function",
+    detail: "Vérifie l'appartenance à une liste de valeurs",
+  }),
+  snippetCompletion("formatDate(${1:date}; ${2:format})", {
+    label: "formatDate",
+    type: "function",
+    detail: "Formate une date",
+  }),
+  snippetCompletion("formatMontant(${1:montant}; ${2:devise})", {
+    label: "formatMontant",
+    type: "function",
+    detail: "Formate un montant avec devise",
+  }),
+  snippetCompletion("base()=30", {
+    label: "base()=30",
+    type: "constant",
+    detail: "CNAM",
+  }),
+  snippetCompletion("base()=100", {
+    label: "base()=100",
+    type: "constant",
+    detail: "Diplôme de l'enseignement supérieur",
+  }),
+  snippetCompletion("edpDateObtention", {
+    label: "edpDateObtention",
+    type: "variable",
+    detail: "Date d'obtention du diplôme",
+  }),
+  snippetCompletion("typeDiplome", {
+    label: "typeDiplome",
+    type: "variable",
+    detail: "Type du diplôme",
+  }),
 ];
 
 const getSuggestionsHeadless = (context: CompletionContext) => {
@@ -136,7 +207,14 @@ interface EditorProps {
 }
 
 export default function PayrollEditorCustomUI({ showSearchInput = true, showCategories = true, showInfoBar = false }: EditorProps) {
-  const [value, setValue] = useState("// Je suis un petit commentaire");
+  const [value, setValue] = useState(`// Exemple de formule
+// Vous pouvez essayer de taper "si" ou "base()" pour voir les suggestions
+si(base()=50; "Prime versée à l'obtention d'un CAP"; 
+si(base()=70; "Prime versée à l'obtention d'un BP / BAC"; 
+si(base()=30; "Prime versée à l'obtention d'un certificat complet du CNAM"; 
+si(base()=100; "Prime versée à l'obtention d'un Diplôme de l'enseignement supérieur"; 
+"Diplôme non reconnu"))))
++ si(edpCommentaire != ""; ", " + siNull(edpCommentaire; ""); "")`);
   const [editorView, setEditorView] = useState<EditorView | null>(null);
   const [completionInfo, setCompletionInfo] = useState<CompletionState>({
     active: false,
@@ -190,55 +268,73 @@ export default function PayrollEditorCustomUI({ showSearchInput = true, showCate
     return matchesCategory && matchesText;
   });
 
-  // La fonction applySuggestion reste inchangée
-  const applySuggestion = (suggestion: Completion) => {
-    if (!editorView || !completionInfo.active) return;
+  const applySuggestion = useCallback(
+    (suggestion: Completion) => {
+      if (!editorView || !completionInfo.active) return;
 
-    const { from, to } = completionInfo;
+      const { from, to } = completionInfo;
 
-    if (typeof suggestion.apply === "function") {
-      suggestion.apply(editorView, suggestion, from, to);
-      return;
-    }
-
-    const insertText = suggestion.label;
-    editorView.dispatch({
-      changes: { from, to, insert: insertText },
-      selection: { anchor: from + insertText.length },
-    });
-
-    setCompletionInfo((prev) => ({ ...prev, active: false }));
-    setFilterText("");
-    editorView.focus();
-  };
-
-  // Le gestionnaire de touches reste inchangé
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!completionInfo.active || filteredSuggestions.length === 0) return;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setCompletionInfo((prev) => ({
-        ...prev,
-        selected: (prev.selected + 1) % filteredSuggestions.length,
-      }));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setCompletionInfo((prev) => ({
-        ...prev,
-        selected: prev.selected > 0 ? prev.selected - 1 : filteredSuggestions.length - 1,
-      }));
-    } else if (e.key === "Enter" || e.key === "Tab") {
-      e.preventDefault();
-      if (filteredSuggestions.length > 0) {
-        applySuggestion(filteredSuggestions[completionInfo.selected]);
+      if (typeof suggestion.apply === "function") {
+        suggestion.apply(editorView, suggestion, from, to);
+      } else {
+        const insertText = suggestion.label;
+        editorView.dispatch({
+          changes: { from, to, insert: insertText },
+          selection: { anchor: from + insertText.length },
+        });
       }
-    } else if (e.key === "Escape") {
-      e.preventDefault();
+
       setCompletionInfo((prev) => ({ ...prev, active: false }));
       setFilterText("");
+
+      setTimeout(() => {
+        editorView.focus();
+      }, 0);
+    },
+    [editorView, completionInfo, setCompletionInfo, setFilterText]
+  );
+
+  // Ajoutez cet useEffect à votre composant
+  useEffect(() => {
+    // Cette fonction gère les événements clavier au niveau de la fenêtre
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (!completionInfo.active || filteredSuggestions.length === 0) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setCompletionInfo((prev) => ({
+          ...prev,
+          selected: (prev.selected + 1) % filteredSuggestions.length,
+        }));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setCompletionInfo((prev) => ({
+          ...prev,
+          selected: prev.selected > 0 ? prev.selected - 1 : filteredSuggestions.length - 1,
+        }));
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        // Uniquement si le menu d'autocomplétion est actif
+        if (completionInfo.active && filteredSuggestions.length > 0) {
+          e.preventDefault();
+          applySuggestion(filteredSuggestions[completionInfo.selected]);
+        }
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        setCompletionInfo((prev) => ({ ...prev, active: false }));
+        setFilterText("");
+      }
+    };
+
+    // Ajouter l'écouteur d'événement quand le menu d'autocomplétion est actif
+    if (completionInfo.active && filteredSuggestions.length > 0) {
+      window.addEventListener("keydown", handleGlobalKeyDown, true);
     }
-  };
+
+    // Nettoyer correctement l'écouteur d'événement
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown, true);
+    };
+  }, [completionInfo.active, filteredSuggestions.length, completionInfo.selected, applySuggestion, filteredSuggestions]);
 
   // L'effet pour gérer les clics à l'extérieur reste inchangé
   useEffect(() => {
@@ -258,12 +354,13 @@ export default function PayrollEditorCustomUI({ showSearchInput = true, showCate
 
   // Les extensions CodeMirror restent inchangées
   const extensions = [
+    espresso,
     javascript(),
     syntaxHighlighting(defaultHighlightStyle),
     customCompletionState,
     customPlugin,
+    // Les keymaps standards ont une priorité inférieure
     keymap.of([
-      indentWithTab,
       ...defaultKeymap,
       {
         key: "Ctrl-Space",
@@ -348,22 +445,24 @@ export default function PayrollEditorCustomUI({ showSearchInput = true, showCate
   const documentation = selectedSuggestion ? getDocumentation(selectedSuggestion) : null;
 
   return (
-    <div className="flex flex-col w-full bg-white rounded-lg shadow-md" onKeyDown={handleKeyDown}>
+    <div className="flex flex-col w-full bg-white border border-neutral-200">
       <div className="p-2 bg-gray-100 border-b border-gray-300">
         <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
       </div>
 
-      <div className="relative flex-grow" ref={editorRef}>
+      <div className="relative flex-grow" ref={editorRef} style={{ outline: "none", border: "none" }}>
         <CodeMirror
           value={value}
           onChange={setValue}
           extensions={extensions}
+          className="outline-none border-none"
           placeholder="Entrez votre formule ici... (essayez de taper 'si' ou 'base')"
           basicSetup={{
             lineNumbers: false,
             foldGutter: false,
-            dropCursor: true,
-            allowMultipleSelections: false,
+            dropCursor: false,
+            highlightActiveLine: false,
+            allowMultipleSelections: true,
             indentOnInput: false,
             bracketMatching: true,
           }}
