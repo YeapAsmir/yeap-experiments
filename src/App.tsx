@@ -9,7 +9,7 @@ import {
 }                    from 'react-router-dom';
 import './App.css';
 import '@fontsource/inter'
-import "@fontsource/fira-code";
+import "@fontsource/geist-mono";
 
 export default function App() {
   const activeClass = "text-neutral-800";

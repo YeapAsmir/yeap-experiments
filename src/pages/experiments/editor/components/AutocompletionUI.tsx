@@ -94,7 +94,7 @@ export function AutocompletionUI({
   return (
     <div
       ref={suggestionsRef}
-      className="flex flex-col bg-white rounded-lg overflow-hidden font-sans min-w-[360px] max-h-[300px] shadow border border-slate-200"
+      className="flex flex-col bg-white rounded-lg overflow-hidden font-sans min-w-[360px] max-h-[300px] shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_1px_1px_-0.5px_rgba(0,0,0,0.06),0px_3px_3px_-1.5px_rgba(0,0,0,0.06),_0px_6px_6px_-3px_rgba(0,0,0,0.06),0px_12px_12px_-6px_rgba(0,0,0,0.06),0px_24px_24px_-12px_rgba(0,0,0,0.06)]"
       style={{
         position: "absolute",
         top: `${position.top}px`,
@@ -109,50 +109,32 @@ export function AutocompletionUI({
       {showCategories && (
         <div className='px-1 pt-1'>
           <div className="flex overflow-x-auto gap-1">
-            <button
-              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
-                ${activeCategory === "all" ? "bg-slate-100" : ""}`}
-              onClick={() => setActiveCategory("all")}
-            >
-              Tous
-            </button>
-            <button
-              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
-                ${activeCategory === "function" ? "bg-slate-100" : ""}`}
-              onClick={() => setActiveCategory("function")}
-            >
-              Fonctions
-            </button>
-            <button
-              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
-                ${activeCategory === "variable" ? "bg-slate-100" : ""}`}
-              onClick={() => setActiveCategory("variable")}
-            >
-              Variables
-            </button>
-            <button
-              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
-                ${activeCategory === "operator" ? "bg-slate-100" : ""}`}
-              onClick={() => setActiveCategory("operator")}
-            >
-              Opérateurs
-            </button>
-            <button
-              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
-                ${activeCategory === "constant" ? "bg-slate-100" : ""}`}
-              onClick={() => setActiveCategory("constant")}
-            >
-              Constantes
-            </button>
+            {[
+              { id: 'all', label: 'Tous' },
+              { id: 'function', label: 'Fonctions' },
+              { id: 'variable', label: 'Variables' },
+              { id: 'operator', label: 'Opérateurs' },
+              { id: 'constant', label: 'Constantes' }
+            ].map(category => (
+              <button
+                key={category.id}
+                className={cn('outline-none px-2 py-1 text-sm text-slate-400 hover:bg-slate-100 hover:text-slate-500 transition-all relative rounded-lg',
+                  activeCategory === category.id ? "bg-slate-100 text-slate-500" : ""
+            )}
+                onClick={() => setActiveCategory(category.id)}
+              >
+                {category.label}
+              </button>
+            ))}
           </div>
 
           {/* Barre de recherche */}
-          {showSearchInput && (
+          {showSearchInput && filteredSuggestions.length > 0 && (
             <div className='pt-1 relative'>
               <input
                 type="text"
                 placeholder="Filtrer les suggestions..."
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-100 transition-all pr-8"
+                className="w-full px-2 py-1 text-sm rounded-lg bg-white border border-slate-100 ring-0 outline-none"
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
               />
@@ -175,7 +157,7 @@ export function AutocompletionUI({
                 ref={(el) => {
                   itemRefs.current[index] = el;
                 }}
-                className={`flex relative items-center p-2 rounded-md cursor-pointer transition-all hover:bg-slate-100 ${index === completionInfo.selected ? "bg-slate-100 border-l-slate-500" : "border-l-transparent"}`}
+                className={`flex relative items-center p-2 rounded-md cursor-pointer transition-all hover:bg-slate-100 ${index === completionInfo.selected ? "bg-slate-100/70" : ""}`}
                 onClick={() => applySuggestion(suggestion)}
                 onMouseEnter={() => setCompletionInfo((prev) => ({ ...prev, selected: index }))}
               >
@@ -201,7 +183,7 @@ export function AutocompletionUI({
                   {showSuggestionDetail && <span className="text-xs text-slate-400 mt-2">{suggestion.detail}</span>}
                 </div>
                 {index === completionInfo.selected && (
-                  <kbd className="absolute right-2 bg-background text-slate-500 bg-white ms-1 -me-1 inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">↵ Enter</kbd>
+                  <kbd className="absolute right-1 mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">Enter</kbd>
                 )}
               </div>
             ))
@@ -212,29 +194,25 @@ export function AutocompletionUI({
 
         {/* Documentation */}
         {selectedSuggestion && documentation && (
-          <div className="grow p-4 overflow-y-auto flex flex-col gap-2 rounded-lg bg-slate-50">
-            <h3 className="text-sm font-mono font-semibold text-slate-800">{selectedSuggestion.label}</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">{documentation.description}</p>
-            {/* <div className="mb-4">
-              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Syntaxe</h4>
-              <code className="block font-mono text-sm p-3 bg-slate-50 rounded border border-slate-200 text-slate-700 overflow-x-auto whitespace-pre">{documentation.syntax}</code>
-            </div> */}
+          <div className="grow p-4 overflow-y-auto flex flex-col gap-1 rounded-lg bg-slate-50">
+            <h3 className="text-sm font-mono font-semibold text-black">{selectedSuggestion.label}</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">{documentation.description}</p>
           </div>
         )}
       </div>
 
-      {showInfoBar && (
-        <div className="p-2 border-t border-slate-200 bg-slate-50">
-          <div className="flex items-center flex-wrap justify-end text-xs text-slate-500">
-            <span className="ml-3">
-              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-400 mx-0.5">↑</kbd>
-              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-400 mx-0.5">↓</kbd> Navigation
+      {showInfoBar && filteredSuggestions.length > 0 && (
+        <div className="px-2 py-1">
+          <div className="flex gap-2 items-center flex-wrap justify-end text-xs text-slate-500">
+            <span>
+              <kbd className="mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">↑</kbd>
+              <kbd className="mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">↓</kbd> Navigation
             </span>
-            <span className="ml-3">
-              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-400 mx-0.5">Enter</kbd> Sélectionner
+            <span>
+              <kbd className="mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">Enter</kbd> Sélectionner
             </span>
-            <span className="ml-3">
-              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-400 mx-0.5">Esc</kbd> Fermer
+            <span>
+              <kbd className="mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">Esc</kbd> Fermer
             </span>
           </div>
         </div>

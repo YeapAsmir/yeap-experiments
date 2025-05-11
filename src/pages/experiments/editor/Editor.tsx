@@ -268,8 +268,7 @@ const Counter = () => {
           overflow: "hidden",
           color: "#5c6166",
           borderRadius: "8px",
-          backgroundColor: "#fdfbfc",
-          // fontSize: "14px",
+          backgroundColor: "#fdfbfc"
         },
         "&.cm-editor .cm-scroller": {
           outline: "none !important",
@@ -288,6 +287,9 @@ const Counter = () => {
         },
         ".cm-gutterElement": {
           padding: "0 8px 0 14px !important",
+        },
+        ".cm-placeholder": {
+          color: "#00000040",
         },
         "&.cm-focused": {
           outline: "none !important",
@@ -375,11 +377,11 @@ const Counter = () => {
           filteredSuggestions={filteredSuggestions}
           documentation={documentation}
           selectedSuggestion={selectedSuggestion}
-          showCategories={true}
+          showCategories={false}
           showSearchInput={false}
           showSuggestionDetail={false}
           showIconForType={false}
-          showInfoBar={false}
+          showInfoBar={true}
           setActiveCategory={setActiveCategory}
           setFilterText={setFilterText}
           setCompletionInfo={setCompletionInfo}
