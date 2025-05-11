@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Completion } from "@codemirror/autocomplete";
 import { CompletionState, DocumentationInfo } from "../types";
 import { getIconForType } from "../utils";
@@ -38,12 +38,50 @@ export function AutocompletionUI({
   applySuggestion,
   suggestionsRef,
 }: AutocompletionUIProps) {
+  // Référence pour le conteneur de la liste déroulante
+  const listContainerRef = useRef<HTMLDivElement>(null);
+
+  // Tableau de références pour chaque élément de suggestion
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Mettre à jour la taille du tableau de refs quand les suggestions changent
+  useEffect(() => {
+    itemRefs.current = itemRefs.current.slice(0, filteredSuggestions.length);
+  }, [filteredSuggestions.length]);
+
+  // Effet pour faire défiler automatiquement pour maintenir l'élément sélectionné visible
+  useEffect(() => {
+    // S'assurer que nous avons un élément sélectionné et que nos refs sont prêtes
+    if (completionInfo.selected >= 0 && completionInfo.selected < filteredSuggestions.length && itemRefs.current[completionInfo.selected] && listContainerRef.current) {
+      const selectedElement = itemRefs.current[completionInfo.selected];
+      const container = listContainerRef.current;
+
+      if (selectedElement) {
+        // Obtenir les informations de position
+        const containerRect = container.getBoundingClientRect();
+        const elementRect = selectedElement.getBoundingClientRect();
+
+        // Vérifier si l'élément n'est pas entièrement visible
+        const isAboveVisibleArea = elementRect.top < containerRect.top;
+        const isBelowVisibleArea = elementRect.bottom > containerRect.bottom;
+
+        if (isAboveVisibleArea) {
+          // Si l'élément est au-dessus de la zone visible, défilez vers le haut
+          selectedElement.scrollIntoView({ block: "start", behavior: "auto" });
+        } else if (isBelowVisibleArea) {
+          // Si l'élément est en dessous de la zone visible, défilez vers le bas
+          selectedElement.scrollIntoView({ block: "end", behavior: "auto" });
+        }
+      }
+    }
+  }, [completionInfo.selected, filteredSuggestions.length]);
+
   if (!completionInfo.active || completionInfo.options.length === 0) return null;
 
   return (
     <div
       ref={suggestionsRef}
-      className="bg-white rounded-lg font-sans min-w-[360px] border border-slate-200"
+      className="flex flex-col bg-white rounded-lg overflow-hidden shadow-md font-sans min-w-[360px] max-h-[300px] border border-slate-200"
       style={{
         position: "absolute",
         top: `${position.top}px`,
@@ -120,13 +158,14 @@ export function AutocompletionUI({
       </div>
 
       {/* Conteneur principal */}
-      <div className="flex max-h-[400px]">
+      <div className="flex h-min overflow-auto w-full">
         {/* Liste des suggestions */}
-        <div className="max-w-52 border-r border-neutral-200 overflow-y-auto overflow-hidden">
+        <div ref={listContainerRef} className="max-w-52 border-r border-neutral-200 overflow-y-auto overflow-hidden">
           {filteredSuggestions.length > 0 ? (
             filteredSuggestions.map((suggestion, index) => (
               <div
                 key={suggestion.label}
+                ref={el => { itemRefs.current[index] = el; }}
                 className={`px-3 py-2.5 cursor-pointer border-l-4 transition-all hover:bg-slate-50 ${index === completionInfo.selected ? "bg-blue-50 border-l-blue-500" : "border-l-transparent"}`}
                 onClick={() => applySuggestion(suggestion)}
                 onMouseEnter={() => setCompletionInfo((prev) => ({ ...prev, selected: index }))}

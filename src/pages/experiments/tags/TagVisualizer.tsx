@@ -235,7 +235,7 @@ interface TagPillProps {
  */
 const TagPill: FC<TagPillProps> = ({ value }) => {
   return (
-    <span className="font-mono px-1 mx-.5 h-7 flex items-center justify-center text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">
+    <span className="font-mono px-1.5 mx-.5 h-7 flex items-center justify-center text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-lg">
       {value}
     </span>
   );

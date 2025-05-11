@@ -1,20 +1,31 @@
 /* eslint-disable no-template-curly-in-string */
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
-import { autocompletion, snippetCompletion, CompletionContext, completionStatus, Completion, nextSnippetField, prevSnippetField, clearSnippet } from "@codemirror/autocomplete";
-import { defaultKeymap, indentWithTab } from "@codemirror/commands";
+import {
+  autocompletion,
+  snippetCompletion,
+  CompletionContext,
+  completionStatus,
+  Completion
+} from "@codemirror/autocomplete";
 import { EditorView, keymap, ViewPlugin } from "@codemirror/view";
 import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
 import { StateField } from "@codemirror/state";
-import { espresso } from "thememirror";
+import { tomorrow } from "thememirror";
 import { AutocompletionUI } from "./components/AutocompletionUI";
 import { InfoBar } from "./components/InfoBar";
-import { CompletionState } from "./types";
+import { CompletionState, EditorProps } from "./types";
 import { getDocumentation } from "./utils";
+import { defaultKeymap } from "@codemirror/commands";
 
 const allSuggestions = [
-  snippetCompletion("si(${1:condition}; ${2:valeur_si_vrai}; ${3:valeur_si_faux})", {
+  snippetCompletion("test(#{1:hello}, #{2:sir})", {
+    label: "test",
+    type: "function",
+    detail: "Test de la fonction",
+  }),
+  snippetCompletion("si(#{1:condition}; #{2:valeur_si_vrai}; #{3:valeur_si_faux})", {
     label: "si",
     type: "function",
     detail: "Évalue une condition et retourne une valeur selon le résultat",
@@ -25,22 +36,22 @@ const allSuggestions = [
     type: "function",
     detail: "Retourne la valeur de base selon le diplôme",
   }),
-  snippetCompletion("siNull(${1:valeur}; ${2:valeur_alternative})", {
+  snippetCompletion("siNull(#{1:valeur}; #{2:valeur_alternative})", {
     label: "siNull",
     type: "function",
     detail: "Vérifie si une valeur est nulle et retourne une valeur alternative",
   }),
-  snippetCompletion("somme(${1:valeur1}; ${2:valeur2}; ${3:...})", {
+  snippetCompletion("somme(#{1:valeur1}; #{2:valeur2}; #{3:...})", {
     label: "somme",
     type: "function",
     detail: "Calcule la somme de plusieurs valeurs",
   }),
-  snippetCompletion("moyenne(${1:valeur1}; ${2:valeur2}; ${3:...})", {
+  snippetCompletion("moyenne(#{1:valeur1}; #{2:valeur2}; #{3:...})", {
     label: "moyenne",
     type: "function",
     detail: "Calcule la moyenne de plusieurs valeurs",
   }),
-  snippetCompletion("arrondi(${1:nombre}; ${2:decimales})", {
+  snippetCompletion("arrondi(#{1:nombre}; #{2:decimales})", {
     label: "arrondi",
     type: "function",
     detail: "Arrondit un nombre au nombre de décimales spécifié",
@@ -75,22 +86,22 @@ const allSuggestions = [
     type: "operator",
     detail: "Différent",
   }),
-  snippetCompletion("concat(${1:texte1}; ${2:texte2}; ${3:...})", {
+  snippetCompletion("concat(#{1:texte1}; #{2:texte2}; #{3:...})", {
     label: "concat",
     type: "function",
     detail: "Concatène plusieurs chaînes de caractères",
   }),
-  snippetCompletion("multiplePar(${1:montant}; ${2:coefficient})", {
+  snippetCompletion("multiplePar(#{1:montant}; #{2:coefficient})", {
     label: "multiplePar",
     type: "function",
     detail: "Multiplie par un coefficient selon le diplôme",
   }),
-  snippetCompletion("anneesDiplome(${1:dateObtention})", {
+  snippetCompletion("anneesDiplome(#{1:dateObtention})", {
     label: "anneesDiplome",
     type: "function",
     detail: "Années écoulées depuis l'obtention du diplôme",
   }),
-  snippetCompletion("majoration(${1:montant}; ${2:pourcentage})", {
+  snippetCompletion("majoration(#{1:montant}; #{2:pourcentage})", {
     label: "majoration",
     type: "function",
     detail: "Applique une majoration selon l'ancienneté",
@@ -100,27 +111,27 @@ const allSuggestions = [
     type: "function",
     detail: "Niveau du diplôme (I à V)",
   }),
-  snippetCompletion("plafond(${1:valeur}; ${2:maximum})", {
+  snippetCompletion("plafond(#{1:valeur}; #{2:maximum})", {
     label: "plafond",
     type: "function",
     detail: "Limite une valeur à un maximum",
   }),
-  snippetCompletion("plancher(${1:valeur}; ${2:minimum})", {
+  snippetCompletion("plancher(#{1:valeur}; #{2:minimum})", {
     label: "plancher",
     type: "function",
     detail: "Assure qu'une valeur ne soit pas inférieure à un minimum",
   }),
-  snippetCompletion("appartientA(${1:valeur}; ${2:valeur1}; ${3:valeur2}; ${4:...})", {
+  snippetCompletion("appartientA(#{1:valeur}; #{2:valeur1}; #{3:valeur2}; #{4:...})", {
     label: "appartientA",
     type: "function",
     detail: "Vérifie l'appartenance à une liste de valeurs",
   }),
-  snippetCompletion("formatDate(${1:date}; ${2:format})", {
+  snippetCompletion("formatDate(#{1:date}; #{2:format})", {
     label: "formatDate",
     type: "function",
     detail: "Formate une date",
   }),
-  snippetCompletion("formatMontant(${1:montant}; ${2:devise})", {
+  snippetCompletion("formatMontant(#{1:montant}; #{2:devise})", {
     label: "formatMontant",
     type: "function",
     detail: "Formate un montant avec devise",
@@ -200,21 +211,8 @@ const customCompletionState = StateField.define<CompletionState>({
   },
 });
 
-interface EditorProps {
-  showSearchInput?: boolean;
-  showCategories?: boolean;
-  showInfoBar?: boolean;
-}
-
 export default function PayrollEditorCustomUI({ showSearchInput = true, showCategories = true, showInfoBar = false }: EditorProps) {
-  const [value, setValue] = useState(`// Exemple de formule
-// Vous pouvez essayer de taper "si" ou "base()" pour voir les suggestions
-si(base()=50; "Prime versée à l'obtention d'un CAP"; 
-si(base()=70; "Prime versée à l'obtention d'un BP / BAC"; 
-si(base()=30; "Prime versée à l'obtention d'un certificat complet du CNAM"; 
-si(base()=100; "Prime versée à l'obtention d'un Diplôme de l'enseignement supérieur"; 
-"Diplôme non reconnu"))))
-+ si(edpCommentaire != ""; ", " + siNull(edpCommentaire; ""); "")`);
+  const [value, setValue] = useState(`// Exemple de formule`);
   const [editorView, setEditorView] = useState<EditorView | null>(null);
   const [completionInfo, setCompletionInfo] = useState<CompletionState>({
     active: false,
@@ -352,52 +350,45 @@ si(base()=100; "Prime versée à l'obtention d'un Diplôme de l'enseignement sup
     };
   }, []);
 
-  // Les extensions CodeMirror restent inchangées
-  const extensions = [
-    espresso,
+  // Obtenir la documentation pour la suggestion sélectionnée
+  const selectedSuggestion = filteredSuggestions[completionInfo.selected] || (filteredSuggestions.length > 0 ? filteredSuggestions[0] : null);
+  const documentation = selectedSuggestion ? getDocumentation(selectedSuggestion) : null;
+  const onChange = useCallback((value) => setValue(value), []);
+  
+  const extensions = useMemo(() => [
+    tomorrow,
     javascript(),
     syntaxHighlighting(defaultHighlightStyle),
     customCompletionState,
     customPlugin,
-    // Les keymaps standards ont une priorité inférieure
-    keymap.of([
-      ...defaultKeymap,
-      {
-        key: "Ctrl-Space",
-        run: (view) => {
-          const context = new CompletionContext(view.state, view.state.selection.main.head, true);
-          const result = getSuggestionsHeadless(context);
-          const currentPos = view.state.selection.main.head;
-          if (result) {
-            setCompletionInfo({
-              active: true,
-              options: result.options,
-              selected: 0,
-              from: result.from,
-              to: currentPos,
-              explicitly: true,
-            });
-
-            const pos = view.coordsAtPos(result.from);
-            if (pos) {
-              const editorRect = view.dom.getBoundingClientRect();
-              setPosition({
-                top: pos.bottom - editorRect.top,
-                left: pos.left - editorRect.left,
-              });
-            }
-            return true;
-          }
-          return false;
-        },
+    EditorView.theme({
+      "&.cm-editor": {
+        backgroundColor: "white",
+        color: "#333",
+        fontSize: "14px",
+        padding: "8px",
+        fontFamily: "monospace",
       },
-    ]),
+      "&.cm-editor .cm-scroller": {
+        outline: "none !important",
+      },
+      "&.cm-editor .cm-content": {
+        outline: "none !important",
+      },
+      "&.cm-editor .cm-content *:focus-visible": {
+        outline: "none !important",
+      },
+      "&.cm-focused": {
+        outline: "none !important",
+      },
+    }),
     autocompletion({
       override: [],
       activateOnTyping: false,
       closeOnBlur: false,
       icons: false,
     }),
+    keymap.of(defaultKeymap),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         const changes = update.changes;
@@ -438,34 +429,21 @@ si(base()=100; "Prime versée à l'obtention d'un Diplôme de l'enseignement sup
         }
       }
     }),
-  ];
-
-  // Obtenir la documentation pour la suggestion sélectionnée
-  const selectedSuggestion = filteredSuggestions[completionInfo.selected] || (filteredSuggestions.length > 0 ? filteredSuggestions[0] : null);
-  const documentation = selectedSuggestion ? getDocumentation(selectedSuggestion) : null;
-
+  ], []);
   return (
     <div className="flex flex-col w-full bg-white border border-neutral-200">
-      <div className="p-2 bg-gray-100 border-b border-gray-300">
+      <div className="p-2 bg-gray-100">
         <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
       </div>
 
-      <div className="relative flex-grow" ref={editorRef} style={{ outline: "none", border: "none" }}>
+      <div className="relative flex-grow rounded-2xl" ref={editorRef} style={{ outline: "none", border: "none" }}>
         <CodeMirror
           value={value}
-          onChange={setValue}
+          onChange={onChange}
           extensions={extensions}
           className="outline-none border-none"
           placeholder="Entrez votre formule ici... (essayez de taper 'si' ou 'base')"
-          basicSetup={{
-            lineNumbers: false,
-            foldGutter: false,
-            dropCursor: false,
-            highlightActiveLine: false,
-            allowMultipleSelections: true,
-            indentOnInput: false,
-            bracketMatching: true,
-          }}
+          basicSetup={false}
         />
 
         <AutocompletionUI
