@@ -11,9 +11,13 @@ import {
 import { AutocompletionUI } from './components/AutocompletionUI';
 import { InfoBar }          from './components/InfoBar';
 import { CompletionState }  from './types';
-import { allSuggestions, getDocumentation } from './utils';
+import {
+    allSuggestions,
+    getDocumentation
+}                           from './utils';
 import {
     Completion,
+    closeBrackets,
     autocompletion,
     completionStatus,
     CompletionContext
@@ -21,20 +25,22 @@ import {
 import {
     history,
     defaultKeymap,
-    historyKeymap
+    historyKeymap,
+    indentWithTab
 }                           from '@codemirror/commands';
 import { javascript }       from '@codemirror/lang-javascript';
 import {
-    syntaxHighlighting,
-    defaultHighlightStyle
+    indentOnInput,
+    bracketMatching
 }                           from '@codemirror/language';
 import { StateField }       from '@codemirror/state';
 import {
     keymap,
     EditorView,
-    ViewPlugin
+    ViewPlugin,
+    lineNumbers
 }                           from '@codemirror/view';
-import { tomorrow }         from 'thememirror';
+import { ayuLight }         from 'thememirror';
 
 const getSuggestionsHeadless = (context: CompletionContext) => {
   const word = context.matchBefore(/\w+/);
@@ -90,7 +96,14 @@ const customCompletionState = StateField.define<CompletionState>({
 });
 
 export default function PayrollEditorCustomUI() {
-  const [value, setValue] = useState(`// Exemple de formule`);
+  const [value, setValue] = useState(`import React, {useState} from 'react';
+
+// My favorite component
+const Counter = () => {
+  const [value, setValue] = useState(0);
+
+  return <span>{value}</span>;
+};`);
   const [editorView, setEditorView] = useState<EditorView | null>(null);
   const [completionInfo, setCompletionInfo] = useState<CompletionState>({
     active: false,
@@ -235,21 +248,33 @@ export default function PayrollEditorCustomUI() {
 
   const extensions = useMemo(
     () => [
-      tomorrow,
+      // Misc
+      ayuLight,
       javascript(),
-      history(),
-      syntaxHighlighting(defaultHighlightStyle),
       customCompletionState,
       customPlugin,
+
+      // Extensions supplémentaires
+      history(),
+      bracketMatching(),
+      lineNumbers(),
+      closeBrackets(),
+      indentOnInput(),
+
+      // Customisation de l'UI
       EditorView.theme({
         "&.cm-editor": {
-          color: "#333",
-          fontSize: "14px",
-          padding: "8px",
-          fontFamily: "monospace",
+          height: "200px",
+          overflow: "hidden",
+          color: "#5c6166",
+          borderRadius: "8px",
+          backgroundColor: "#fdfbfc",
+          // fontSize: "14px",
         },
         "&.cm-editor .cm-scroller": {
           outline: "none !important",
+          padding: "8px 0",
+          overflow: "auto",
         },
         "&.cm-editor .cm-content": {
           outline: "none !important",
@@ -257,17 +282,34 @@ export default function PayrollEditorCustomUI() {
         "&.cm-editor .cm-content *:focus-visible": {
           outline: "none !important",
         },
+        ".cm-gutters": {
+          backgroundColor: "transparent",
+          borderRight: "none",
+        },
+        ".cm-gutterElement": {
+          padding: "0 8px 0 14px !important",
+        },
         "&.cm-focused": {
           outline: "none !important",
         },
       }),
+
+      // Autocomplétion
       autocompletion({
         override: [],
         activateOnTyping: false,
         closeOnBlur: false,
         icons: false,
       }),
-      keymap.of([...defaultKeymap, ...historyKeymap]), // Fusionner les deux ensembles de raccourcis
+
+      // Raccourcis clavier / commandes
+      keymap.of([
+        ...defaultKeymap,
+        ...historyKeymap,
+        indentWithTab,
+      ]),
+
+      // Hook pour la gestion des snippets / positionnement de l'UI de suggestion
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
           const changes = update.changes;
@@ -312,18 +354,16 @@ export default function PayrollEditorCustomUI() {
     []
   );
   return (
-    <div className="max-w-2xl mx-auto flex flex-col w-full bg-white border border-neutral-200">
-      <div className="p-2 bg-gray-100">
-        <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
-      </div>
+    <div className="max-w-2xl mx-auto flex flex-col w-full gap-4">
+      <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
 
-      <div className="relative flex-grow rounded-2xl" ref={editorRef} style={{ outline: "none", border: "none" }}>
+      <div className="relative flex-grow rounded-md border border-neutral-200" ref={editorRef}>
         <CodeMirror
           value={value}
           onChange={onChange}
           extensions={extensions}
           className="outline-none border-none"
-          placeholder="Entrez votre formule ici... (essayez de taper 'si' ou 'base')"
+          placeholder="Entrez votre code ici..."
           basicSetup={false}
         />
 

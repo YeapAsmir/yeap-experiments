@@ -8,9 +8,10 @@ import {
     BrowserRouter
 }                    from 'react-router-dom';
 import './App.css';
+import '@fontsource/inter'
+import "@fontsource/fira-code";
 
 export default function App() {
-  // Classes Tailwind que l'on veut appliquer
   const activeClass = "text-neutral-800";
   const inactiveClass = "text-neutral-400 hover:text-neutral-800 transition";
 

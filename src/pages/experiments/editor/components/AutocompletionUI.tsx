@@ -4,6 +4,7 @@ import {
     useRef,
     useEffect
 }                         from 'react';
+import { cn }             from '../../../../utils';
 import {
     CompletionState,
     DocumentationInfo
@@ -93,7 +94,7 @@ export function AutocompletionUI({
   return (
     <div
       ref={suggestionsRef}
-      className="flex flex-col bg-white rounded-lg overflow-hidden shadow-md font-sans min-w-[360px] max-h-[300px] border border-slate-200"
+      className="flex flex-col bg-white rounded-lg overflow-hidden font-sans min-w-[360px] max-h-[300px] shadow border border-slate-200"
       style={{
         position: "absolute",
         top: `${position.top}px`,
@@ -106,39 +107,39 @@ export function AutocompletionUI({
     >
       {/* En-tête avec catégories */}
       {showCategories && (
-        <div className="border-b border-slate-200 bg-slate-50">
-          <div className="flex overflow-x-auto">
+        <div className='px-1 pt-1'>
+          <div className="flex overflow-x-auto gap-1">
             <button
-              className={`px-3 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all relative
-                ${activeCategory === "all" ? "text-blue-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600" : ""}`}
+              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
+                ${activeCategory === "all" ? "bg-slate-100" : ""}`}
               onClick={() => setActiveCategory("all")}
             >
               Tous
             </button>
             <button
-              className={`px-3 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all relative
-                ${activeCategory === "function" ? "text-blue-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600" : ""}`}
+              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
+                ${activeCategory === "function" ? "bg-slate-100" : ""}`}
               onClick={() => setActiveCategory("function")}
             >
               Fonctions
             </button>
             <button
-              className={`px-3 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all relative
-                ${activeCategory === "variable" ? "text-blue-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600" : ""}`}
+              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
+                ${activeCategory === "variable" ? "bg-slate-100" : ""}`}
               onClick={() => setActiveCategory("variable")}
             >
               Variables
             </button>
             <button
-              className={`px-3 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all relative
-                ${activeCategory === "operator" ? "text-blue-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600" : ""}`}
+              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
+                ${activeCategory === "operator" ? "bg-slate-100" : ""}`}
               onClick={() => setActiveCategory("operator")}
             >
               Opérateurs
             </button>
             <button
-              className={`px-3 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all relative
-                ${activeCategory === "constant" ? "text-blue-600 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-blue-600" : ""}`}
+              className={`outline-none px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition-all relative rounded-lg
+                ${activeCategory === "constant" ? "bg-slate-100" : ""}`}
               onClick={() => setActiveCategory("constant")}
             >
               Constantes
@@ -147,32 +148,26 @@ export function AutocompletionUI({
 
           {/* Barre de recherche */}
           {showSearchInput && (
-            <div className="relative p-2 border-t border-slate-200">
+            <div className='pt-1 relative'>
               <input
                 type="text"
                 placeholder="Filtrer les suggestions..."
-                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all pr-8"
+                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:border-slate-300 focus:ring-2 focus:ring-slate-100 transition-all pr-8"
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
               />
-              {filterText && (
-                <button
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                  onClick={() => setFilterText("")}
-                  title="Effacer le filtre"
-                >
-                  ×
-                </button>
-              )}
             </div>
           )}
         </div>
       )}
 
       {/* Conteneur principal */}
-      <div className="flex h-min overflow-auto w-full">
+      <div className="flex h-min overflow-auto w-full p-1 gap-2">
         {/* Liste des suggestions */}
-        <div ref={listContainerRef} className="w-full max-w-52 border-r border-neutral-200 overflow-y-auto overflow-hidden">
+        <div ref={listContainerRef} className={cn(
+          "w-full overflow-y-auto overflow-hidden",
+          filteredSuggestions.length > 0 ? "max-w-52" : "w-full"
+        )}>
           {filteredSuggestions.length > 0 ? (
             filteredSuggestions.map((suggestion, index) => (
               <div
@@ -180,13 +175,13 @@ export function AutocompletionUI({
                 ref={(el) => {
                   itemRefs.current[index] = el;
                 }}
-                className={`flex px-3 py-2.5 cursor-pointer border-l-4 transition-all hover:bg-slate-50 ${index === completionInfo.selected ? "bg-blue-50 border-l-blue-500" : "border-l-transparent"}`}
+                className={`flex relative items-center p-2 rounded-md cursor-pointer transition-all hover:bg-slate-100 ${index === completionInfo.selected ? "bg-slate-100 border-l-slate-500" : "border-l-transparent"}`}
                 onClick={() => applySuggestion(suggestion)}
                 onMouseEnter={() => setCompletionInfo((prev) => ({ ...prev, selected: index }))}
               >
                 {showIconForType && (
                   <span
-                    className={`inline-flex shrink-0 mt-.5 items-center justify-center w-6 h-6 rounded mr-2 text-sm font-semibold ${
+                    className={`inline-flex shrink-0 mt-.5 items-center justify-center w-5 h-5 rounded mr-2 text-xs font-semibold ${
                       suggestion.type === "function"
                         ? "bg-indigo-100 text-indigo-600"
                         : suggestion.type === "constant"
@@ -201,28 +196,29 @@ export function AutocompletionUI({
                     {getIconForType(suggestion.type || "default")}
                   </span>
                 )}
-                <div className="flex flex-col mb-1">
-                  <span className="text-sm font-medium text-slate-700">{suggestion.label}</span>
-                  {showSuggestionDetail && <span className="text-xs text-slate-500">{suggestion.detail}</span>}
+                <div className="flex flex-col">
+                  <span className="text-xs text-slate-700 font-mono">{suggestion.label}</span>
+                  {showSuggestionDetail && <span className="text-xs text-slate-400 mt-2">{suggestion.detail}</span>}
                 </div>
+                {index === completionInfo.selected && (
+                  <kbd className="absolute right-2 bg-background text-slate-500 bg-white ms-1 -me-1 inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">↵ Enter</kbd>
+                )}
               </div>
             ))
           ) : (
-            <div className="text-xs p-4 text-neutral-400">Aucune suggestion trouvée</div>
+            <div className="text-xs p-4 text-slate-400 text-center">Aucune suggestion trouvée</div>
           )}
         </div>
 
         {/* Documentation */}
         {selectedSuggestion && documentation && (
-          <div className="w-3/5 p-4 overflow-y-auto">
-            <h3 className="text-base font-semibold text-slate-800 mb-2">{selectedSuggestion.label}</h3>
-
-            <p className="text-sm text-slate-600 mb-4 leading-relaxed">{documentation.description}</p>
-
-            <div className="mb-4">
+          <div className="grow p-4 overflow-y-auto flex flex-col gap-2 rounded-lg bg-slate-50">
+            <h3 className="text-sm font-mono font-semibold text-slate-800">{selectedSuggestion.label}</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">{documentation.description}</p>
+            {/* <div className="mb-4">
               <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Syntaxe</h4>
               <code className="block font-mono text-sm p-3 bg-slate-50 rounded border border-slate-200 text-slate-700 overflow-x-auto whitespace-pre">{documentation.syntax}</code>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
@@ -231,14 +227,14 @@ export function AutocompletionUI({
         <div className="p-2 border-t border-slate-200 bg-slate-50">
           <div className="flex items-center flex-wrap justify-end text-xs text-slate-500">
             <span className="ml-3">
-              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-600 mx-0.5">↑</kbd>
-              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-600 mx-0.5">↓</kbd> Navigation
+              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-400 mx-0.5">↑</kbd>
+              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-400 mx-0.5">↓</kbd> Navigation
             </span>
             <span className="ml-3">
-              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-600 mx-0.5">Enter</kbd> Sélectionner
+              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-400 mx-0.5">Enter</kbd> Sélectionner
             </span>
             <span className="ml-3">
-              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-600 mx-0.5">Esc</kbd> Fermer
+              <kbd className="px-1.5 py-0.5 text-[11px] font-mono bg-slate-200 rounded text-slate-400 mx-0.5">Esc</kbd> Fermer
             </span>
           </div>
         </div>
