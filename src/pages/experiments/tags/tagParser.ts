@@ -1,6 +1,6 @@
-// tagParser.ts - Implémentation POO du parseur d'expressions de tags
+// Misc
+import * as ohm     from 'ohm-js';
 import { useState } from 'react';
-import * as ohm from 'ohm-js';
 
 // ------------- TYPES -------------
 

@@ -1,8 +1,13 @@
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
-import TagVisualizer from "./pages/experiments/tags/TagVisualizer";
-import PayrollEditor from "./pages/experiments/editor/Editor";
-
-import "./App.css";
+// Misc
+import PayrollEditor from './pages/experiments/editor/Editor';
+import TagVisualizer from './pages/experiments/tags/TagVisualizer';
+import {
+    Route,
+    Routes,
+    NavLink,
+    BrowserRouter
+}                    from 'react-router-dom';
+import './App.css';
 
 export default function App() {
   // Classes Tailwind que l'on veut appliquer

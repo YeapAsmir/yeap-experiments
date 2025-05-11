@@ -1,7 +1,15 @@
-import React, { useEffect, useRef } from "react";
-import { Completion } from "@codemirror/autocomplete";
-import { CompletionState, DocumentationInfo } from "../types";
-import { getIconForType } from "../utils";
+// Misc
+import React              from 'react';
+import {
+    useRef,
+    useEffect
+}                         from 'react';
+import {
+    CompletionState,
+    DocumentationInfo
+}                         from '../types';
+import { getIconForType } from '../utils';
+import { Completion }     from '@codemirror/autocomplete';
 
 interface AutocompletionUIProps {
   completionInfo: CompletionState;
@@ -12,8 +20,10 @@ interface AutocompletionUIProps {
   documentation: DocumentationInfo | null;
   selectedSuggestion: Completion | null;
   showSearchInput?: boolean;
+  showIconForType?: boolean;
   showCategories?: boolean;
   showInfoBar?: boolean;
+  showSuggestionDetail?: boolean;
   setActiveCategory: (category: string) => void;
   setFilterText: (text: string) => void;
   setCompletionInfo: (updater: (prev: CompletionState) => CompletionState) => void;
@@ -32,7 +42,9 @@ export function AutocompletionUI({
   showSearchInput = true,
   showCategories = true,
   showInfoBar = true,
+  showSuggestionDetail = false,
   setActiveCategory,
+  showIconForType = false,
   setFilterText,
   setCompletionInfo,
   applySuggestion,
@@ -93,8 +105,8 @@ export function AutocompletionUI({
       }}
     >
       {/* En-tête avec catégories */}
-      <div className="border-b border-slate-200 bg-slate-50">
-        {showCategories && (
+      {showCategories && (
+        <div className="border-b border-slate-200 bg-slate-50">
           <div className="flex overflow-x-auto">
             <button
               className={`px-3 py-2 text-sm text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all relative
@@ -132,47 +144,49 @@ export function AutocompletionUI({
               Constantes
             </button>
           </div>
-        )}
 
-        {/* Barre de recherche */}
-        {showSearchInput && (
-          <div className="relative p-2 border-t border-slate-200">
-            <input
-              type="text"
-              placeholder="Filtrer les suggestions..."
-              className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all pr-8"
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-            />
-            {filterText && (
-              <button
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-                onClick={() => setFilterText("")}
-                title="Effacer le filtre"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+          {/* Barre de recherche */}
+          {showSearchInput && (
+            <div className="relative p-2 border-t border-slate-200">
+              <input
+                type="text"
+                placeholder="Filtrer les suggestions..."
+                className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all pr-8"
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+              />
+              {filterText && (
+                <button
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                  onClick={() => setFilterText("")}
+                  title="Effacer le filtre"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Conteneur principal */}
       <div className="flex h-min overflow-auto w-full">
         {/* Liste des suggestions */}
-        <div ref={listContainerRef} className="max-w-52 border-r border-neutral-200 overflow-y-auto overflow-hidden">
+        <div ref={listContainerRef} className="w-full max-w-52 border-r border-neutral-200 overflow-y-auto overflow-hidden">
           {filteredSuggestions.length > 0 ? (
             filteredSuggestions.map((suggestion, index) => (
               <div
                 key={suggestion.label}
-                ref={el => { itemRefs.current[index] = el; }}
-                className={`px-3 py-2.5 cursor-pointer border-l-4 transition-all hover:bg-slate-50 ${index === completionInfo.selected ? "bg-blue-50 border-l-blue-500" : "border-l-transparent"}`}
+                ref={(el) => {
+                  itemRefs.current[index] = el;
+                }}
+                className={`flex px-3 py-2.5 cursor-pointer border-l-4 transition-all hover:bg-slate-50 ${index === completionInfo.selected ? "bg-blue-50 border-l-blue-500" : "border-l-transparent"}`}
                 onClick={() => applySuggestion(suggestion)}
                 onMouseEnter={() => setCompletionInfo((prev) => ({ ...prev, selected: index }))}
               >
-                <div className="flex items-center mb-1">
+                {showIconForType && (
                   <span
-                    className={`inline-flex items-center justify-center w-6 h-6 rounded mr-2 text-sm font-semibold ${
+                    className={`inline-flex shrink-0 mt-.5 items-center justify-center w-6 h-6 rounded mr-2 text-sm font-semibold ${
                       suggestion.type === "function"
                         ? "bg-indigo-100 text-indigo-600"
                         : suggestion.type === "constant"
@@ -186,9 +200,11 @@ export function AutocompletionUI({
                   >
                     {getIconForType(suggestion.type || "default")}
                   </span>
+                )}
+                <div className="flex flex-col mb-1">
                   <span className="text-sm font-medium text-slate-700">{suggestion.label}</span>
+                  {showSuggestionDetail && <span className="text-xs text-slate-500">{suggestion.detail}</span>}
                 </div>
-                <div className="text-xs text-slate-500 ml-8 truncate">{suggestion.detail}</div>
               </div>
             ))
           ) : (

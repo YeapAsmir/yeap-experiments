@@ -1,4 +1,6 @@
-import React, { JSX } from 'react';
+// Misc
+import React   from 'react';
+import { JSX } from 'react';
 
 type JSONBeautifierOptions = {
   indentSize?: number;

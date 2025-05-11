@@ -1,7 +1,18 @@
-// TagVisualizer.tsx - Composant React pour visualiser les expressions de tags (version corrigée)
-import React, { useState, useEffect, FC, ReactNode, useRef } from 'react';
-import { useTagParser, ASTNode, tagParser } from './tagParser';
+// Misc
+import React             from 'react';
 import useJSONBeautifier from './useASTHighlighter';
+import {
+    FC,
+    useRef,
+    useState,
+    ReactNode,
+    useEffect
+}                        from 'react';
+import {
+    ASTNode,
+    tagParser,
+    useTagParser
+}                        from './tagParser';
 
 // ------------- CLASSE GESTIONNAIRE D'EXEMPLES -------------
 

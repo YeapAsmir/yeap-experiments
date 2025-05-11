@@ -1,4 +1,5 @@
-import { Completion } from "@codemirror/autocomplete";
+// Misc
+import { Completion } from '@codemirror/autocomplete';
 
 export interface CompletionState {
   active: boolean;
@@ -18,10 +19,4 @@ export interface DocumentationInfo {
 export interface Position {
   top: number;
   left: number;
-}
-
-export interface EditorProps {
-  showSearchInput?: boolean;
-  showCategories?: boolean;
-  showInfoBar?: boolean;
 }

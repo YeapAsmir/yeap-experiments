@@ -1,162 +1,40 @@
-/* eslint-disable no-template-curly-in-string */
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
+// Misc
+import React                from 'react';
+import CodeMirror           from '@uiw/react-codemirror';
 import {
-  autocompletion,
-  snippetCompletion,
-  CompletionContext,
-  completionStatus,
-  Completion
-} from "@codemirror/autocomplete";
-import { EditorView, keymap, ViewPlugin } from "@codemirror/view";
-import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
-import { StateField } from "@codemirror/state";
-import { tomorrow } from "thememirror";
-import { AutocompletionUI } from "./components/AutocompletionUI";
-import { InfoBar } from "./components/InfoBar";
-import { CompletionState, EditorProps } from "./types";
-import { getDocumentation } from "./utils";
-import { defaultKeymap } from "@codemirror/commands";
-
-const allSuggestions = [
-  snippetCompletion("test(#{1:hello}, #{2:sir})", {
-    label: "test",
-    type: "function",
-    detail: "Test de la fonction",
-  }),
-  snippetCompletion("si(#{1:condition}; #{2:valeur_si_vrai}; #{3:valeur_si_faux})", {
-    label: "si",
-    type: "function",
-    detail: "Évalue une condition et retourne une valeur selon le résultat",
-    boost: 99,
-  }),
-  snippetCompletion("base()", {
-    label: "base()",
-    type: "function",
-    detail: "Retourne la valeur de base selon le diplôme",
-  }),
-  snippetCompletion("siNull(#{1:valeur}; #{2:valeur_alternative})", {
-    label: "siNull",
-    type: "function",
-    detail: "Vérifie si une valeur est nulle et retourne une valeur alternative",
-  }),
-  snippetCompletion("somme(#{1:valeur1}; #{2:valeur2}; #{3:...})", {
-    label: "somme",
-    type: "function",
-    detail: "Calcule la somme de plusieurs valeurs",
-  }),
-  snippetCompletion("moyenne(#{1:valeur1}; #{2:valeur2}; #{3:...})", {
-    label: "moyenne",
-    type: "function",
-    detail: "Calcule la moyenne de plusieurs valeurs",
-  }),
-  snippetCompletion("arrondi(#{1:nombre}; #{2:decimales})", {
-    label: "arrondi",
-    type: "function",
-    detail: "Arrondit un nombre au nombre de décimales spécifié",
-  }),
-  snippetCompletion("base()=50", {
-    label: "base()=50",
-    type: "constant",
-    detail: "CAP",
-  }),
-  snippetCompletion("base()=70", {
-    label: "base()=70",
-    type: "constant",
-    detail: "BP / BAC",
-  }),
-  snippetCompletion("edpCommentaire", {
-    label: "edpCommentaire",
-    type: "variable",
-    detail: "Commentaire associé à la prime",
-  }),
-  snippetCompletion("edpMontant", {
-    label: "edpMontant",
-    type: "variable",
-    detail: "Montant de la prime",
-  }),
-  snippetCompletion(" + ", {
-    label: "+",
-    type: "operator",
-    detail: "Concatène ou additionne",
-  }),
-  snippetCompletion(" != ", {
-    label: "!=",
-    type: "operator",
-    detail: "Différent",
-  }),
-  snippetCompletion("concat(#{1:texte1}; #{2:texte2}; #{3:...})", {
-    label: "concat",
-    type: "function",
-    detail: "Concatène plusieurs chaînes de caractères",
-  }),
-  snippetCompletion("multiplePar(#{1:montant}; #{2:coefficient})", {
-    label: "multiplePar",
-    type: "function",
-    detail: "Multiplie par un coefficient selon le diplôme",
-  }),
-  snippetCompletion("anneesDiplome(#{1:dateObtention})", {
-    label: "anneesDiplome",
-    type: "function",
-    detail: "Années écoulées depuis l'obtention du diplôme",
-  }),
-  snippetCompletion("majoration(#{1:montant}; #{2:pourcentage})", {
-    label: "majoration",
-    type: "function",
-    detail: "Applique une majoration selon l'ancienneté",
-  }),
-  snippetCompletion("niveauDiplome()", {
-    label: "niveauDiplome",
-    type: "function",
-    detail: "Niveau du diplôme (I à V)",
-  }),
-  snippetCompletion("plafond(#{1:valeur}; #{2:maximum})", {
-    label: "plafond",
-    type: "function",
-    detail: "Limite une valeur à un maximum",
-  }),
-  snippetCompletion("plancher(#{1:valeur}; #{2:minimum})", {
-    label: "plancher",
-    type: "function",
-    detail: "Assure qu'une valeur ne soit pas inférieure à un minimum",
-  }),
-  snippetCompletion("appartientA(#{1:valeur}; #{2:valeur1}; #{3:valeur2}; #{4:...})", {
-    label: "appartientA",
-    type: "function",
-    detail: "Vérifie l'appartenance à une liste de valeurs",
-  }),
-  snippetCompletion("formatDate(#{1:date}; #{2:format})", {
-    label: "formatDate",
-    type: "function",
-    detail: "Formate une date",
-  }),
-  snippetCompletion("formatMontant(#{1:montant}; #{2:devise})", {
-    label: "formatMontant",
-    type: "function",
-    detail: "Formate un montant avec devise",
-  }),
-  snippetCompletion("base()=30", {
-    label: "base()=30",
-    type: "constant",
-    detail: "CNAM",
-  }),
-  snippetCompletion("base()=100", {
-    label: "base()=100",
-    type: "constant",
-    detail: "Diplôme de l'enseignement supérieur",
-  }),
-  snippetCompletion("edpDateObtention", {
-    label: "edpDateObtention",
-    type: "variable",
-    detail: "Date d'obtention du diplôme",
-  }),
-  snippetCompletion("typeDiplome", {
-    label: "typeDiplome",
-    type: "variable",
-    detail: "Type du diplôme",
-  }),
-];
+    useRef,
+    useMemo,
+    useState,
+    useEffect,
+    useCallback
+}                           from 'react';
+import { AutocompletionUI } from './components/AutocompletionUI';
+import { InfoBar }          from './components/InfoBar';
+import { CompletionState }  from './types';
+import { allSuggestions, getDocumentation } from './utils';
+import {
+    Completion,
+    autocompletion,
+    completionStatus,
+    CompletionContext
+}                           from '@codemirror/autocomplete';
+import {
+    history,
+    defaultKeymap,
+    historyKeymap
+}                           from '@codemirror/commands';
+import { javascript }       from '@codemirror/lang-javascript';
+import {
+    syntaxHighlighting,
+    defaultHighlightStyle
+}                           from '@codemirror/language';
+import { StateField }       from '@codemirror/state';
+import {
+    keymap,
+    EditorView,
+    ViewPlugin
+}                           from '@codemirror/view';
+import { tomorrow }         from 'thememirror';
 
 const getSuggestionsHeadless = (context: CompletionContext) => {
   const word = context.matchBefore(/\w+/);
@@ -211,7 +89,7 @@ const customCompletionState = StateField.define<CompletionState>({
   },
 });
 
-export default function PayrollEditorCustomUI({ showSearchInput = true, showCategories = true, showInfoBar = false }: EditorProps) {
+export default function PayrollEditorCustomUI() {
   const [value, setValue] = useState(`// Exemple de formule`);
   const [editorView, setEditorView] = useState<EditorView | null>(null);
   const [completionInfo, setCompletionInfo] = useState<CompletionState>({
@@ -237,7 +115,7 @@ export default function PayrollEditorCustomUI({ showSearchInput = true, showCate
         setEditorView(view);
       }
 
-      update(update) {
+      update(update: { docChanged?: boolean; selectionSet?: boolean; state: any; view: EditorView }) {
         if (update.docChanged || update.selectionSet) {
           const state = update.state.field(customCompletionState, false);
           if (state) {
@@ -354,84 +232,87 @@ export default function PayrollEditorCustomUI({ showSearchInput = true, showCate
   const selectedSuggestion = filteredSuggestions[completionInfo.selected] || (filteredSuggestions.length > 0 ? filteredSuggestions[0] : null);
   const documentation = selectedSuggestion ? getDocumentation(selectedSuggestion) : null;
   const onChange = useCallback((value) => setValue(value), []);
-  
-  const extensions = useMemo(() => [
-    tomorrow,
-    javascript(),
-    syntaxHighlighting(defaultHighlightStyle),
-    customCompletionState,
-    customPlugin,
-    EditorView.theme({
-      "&.cm-editor": {
-        backgroundColor: "white",
-        color: "#333",
-        fontSize: "14px",
-        padding: "8px",
-        fontFamily: "monospace",
-      },
-      "&.cm-editor .cm-scroller": {
-        outline: "none !important",
-      },
-      "&.cm-editor .cm-content": {
-        outline: "none !important",
-      },
-      "&.cm-editor .cm-content *:focus-visible": {
-        outline: "none !important",
-      },
-      "&.cm-focused": {
-        outline: "none !important",
-      },
-    }),
-    autocompletion({
-      override: [],
-      activateOnTyping: false,
-      closeOnBlur: false,
-      icons: false,
-    }),
-    keymap.of(defaultKeymap),
-    EditorView.updateListener.of((update) => {
-      if (update.docChanged) {
-        const changes = update.changes;
-        let shouldActivateCompletion = false;
-        changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
-          const text = inserted.toString();
-          if (text.length === 1 && /[a-zA-Z]/.test(text)) {
-            shouldActivateCompletion = true;
-          }
-        });
 
-        if (shouldActivateCompletion) {
-          const context = new CompletionContext(update.state, update.state.selection.main.head, false);
-          const result = getSuggestionsHeadless(context);
+  const extensions = useMemo(
+    () => [
+      tomorrow,
+      javascript(),
+      history(),
+      syntaxHighlighting(defaultHighlightStyle),
+      customCompletionState,
+      customPlugin,
+      EditorView.theme({
+        "&.cm-editor": {
+          color: "#333",
+          fontSize: "14px",
+          padding: "8px",
+          fontFamily: "monospace",
+        },
+        "&.cm-editor .cm-scroller": {
+          outline: "none !important",
+        },
+        "&.cm-editor .cm-content": {
+          outline: "none !important",
+        },
+        "&.cm-editor .cm-content *:focus-visible": {
+          outline: "none !important",
+        },
+        "&.cm-focused": {
+          outline: "none !important",
+        },
+      }),
+      autocompletion({
+        override: [],
+        activateOnTyping: false,
+        closeOnBlur: false,
+        icons: false,
+      }),
+      keymap.of([...defaultKeymap, ...historyKeymap]), // Fusionner les deux ensembles de raccourcis
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          const changes = update.changes;
+          let shouldActivateCompletion = false;
+          changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
+            const text = inserted.toString();
+            if (text.length === 1 && /[a-zA-Z]/.test(text)) {
+              shouldActivateCompletion = true;
+            }
+          });
 
-          if (result && result.options.length > 0) {
-            const word = context.matchBefore(/\w+/);
-            const to = word ? word.to : update.state.selection.main.head;
+          if (shouldActivateCompletion) {
+            const context = new CompletionContext(update.state, update.state.selection.main.head, false);
+            const result = getSuggestionsHeadless(context);
 
-            setCompletionInfo({
-              active: true,
-              options: result.options,
-              selected: 0,
-              from: result.from,
-              to: to,
-              explicitly: false,
-            });
+            if (result && result.options.length > 0) {
+              const word = context.matchBefore(/\w+/);
+              const to = word ? word.to : update.state.selection.main.head;
 
-            const pos = update.view.coordsAtPos(result.from);
-            if (pos) {
-              const editorRect = update.view.dom.getBoundingClientRect();
-              setPosition({
-                top: pos.bottom - editorRect.top,
-                left: pos.left - editorRect.left,
+              setCompletionInfo({
+                active: true,
+                options: result.options,
+                selected: 0,
+                from: result.from,
+                to: to,
+                explicitly: false,
               });
+
+              const pos = update.view.coordsAtPos(result.from);
+              if (pos) {
+                const editorRect = update.view.dom.getBoundingClientRect();
+                setPosition({
+                  top: pos.bottom - editorRect.top,
+                  left: pos.left - editorRect.left,
+                });
+              }
             }
           }
         }
-      }
-    }),
-  ], []);
+      }),
+    ],
+    []
+  );
   return (
-    <div className="flex flex-col w-full bg-white border border-neutral-200">
+    <div className="max-w-2xl mx-auto flex flex-col w-full bg-white border border-neutral-200">
       <div className="p-2 bg-gray-100">
         <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
       </div>
@@ -454,9 +335,11 @@ export default function PayrollEditorCustomUI({ showSearchInput = true, showCate
           filteredSuggestions={filteredSuggestions}
           documentation={documentation}
           selectedSuggestion={selectedSuggestion}
-          showSearchInput={showSearchInput}
-          showCategories={showCategories}
-          showInfoBar={showInfoBar}
+          showCategories={true}
+          showSearchInput={false}
+          showSuggestionDetail={false}
+          showIconForType={false}
+          showInfoBar={false}
           setActiveCategory={setActiveCategory}
           setFilterText={setFilterText}
           setCompletionInfo={setCompletionInfo}

@@ -1,5 +1,9 @@
-import { Completion } from '@codemirror/autocomplete';
+// Misc
 import { DocumentationInfo } from './types';
+import {
+    Completion,
+    snippetCompletion
+}                            from '@codemirror/autocomplete';
 
 export function getIconForType(type: string) {
   switch (type) {
@@ -15,6 +19,145 @@ export function getIconForType(type: string) {
       return '•';
   }
 }
+
+export const allSuggestions = [
+  snippetCompletion("test(#{1:hello}, #{2:sir})", {
+    label: "test",
+    type: "function",
+    detail: "Test de la fonction",
+  }),
+  snippetCompletion("si(#{1:condition}; #{2:valeur_si_vrai}; #{3:valeur_si_faux})", {
+    label: "si",
+    type: "function",
+    detail: "Évalue une condition et retourne une valeur selon le résultat",
+    boost: 99,
+  }),
+  snippetCompletion("base()", {
+    label: "base()",
+    type: "function",
+    detail: "Retourne la valeur de base selon le diplôme",
+  }),
+  snippetCompletion("siNull(#{1:valeur}; #{2:valeur_alternative})", {
+    label: "siNull",
+    type: "function",
+    detail: "Vérifie si une valeur est nulle et retourne une valeur alternative",
+  }),
+  snippetCompletion("somme(#{1:valeur1}; #{2:valeur2}; #{3:...})", {
+    label: "somme",
+    type: "function",
+    detail: "Calcule la somme de plusieurs valeurs",
+  }),
+  snippetCompletion("moyenne(#{1:valeur1}; #{2:valeur2}; #{3:...})", {
+    label: "moyenne",
+    type: "function",
+    detail: "Calcule la moyenne de plusieurs valeurs",
+  }),
+  snippetCompletion("arrondi(#{1:nombre}; #{2:decimales})", {
+    label: "arrondi",
+    type: "function",
+    detail: "Arrondit un nombre au nombre de décimales spécifié",
+  }),
+  snippetCompletion("base()=50", {
+    label: "base()=50",
+    type: "constant",
+    detail: "CAP",
+  }),
+  snippetCompletion("base()=70", {
+    label: "base()=70",
+    type: "constant",
+    detail: "BP / BAC",
+  }),
+  snippetCompletion("edpCommentaire", {
+    label: "edpCommentaire",
+    type: "variable",
+    detail: "Commentaire associé à la prime",
+  }),
+  snippetCompletion("edpMontant", {
+    label: "edpMontant",
+    type: "variable",
+    detail: "Montant de la prime",
+  }),
+  snippetCompletion(" + ", {
+    label: "+",
+    type: "operator",
+    detail: "Concatène ou additionne",
+  }),
+  snippetCompletion(" != ", {
+    label: "!=",
+    type: "operator",
+    detail: "Différent",
+  }),
+  snippetCompletion("concat(#{1:texte1}; #{2:texte2}; #{3:...})", {
+    label: "concat",
+    type: "function",
+    detail: "Concatène plusieurs chaînes de caractères",
+  }),
+  snippetCompletion("multiplePar(#{1:montant}; #{2:coefficient})", {
+    label: "multiplePar",
+    type: "function",
+    detail: "Multiplie par un coefficient selon le diplôme",
+  }),
+  snippetCompletion("anneesDiplome(#{1:dateObtention})", {
+    label: "anneesDiplome",
+    type: "function",
+    detail: "Années écoulées depuis l'obtention du diplôme",
+  }),
+  snippetCompletion("majoration(#{1:montant}; #{2:pourcentage})", {
+    label: "majoration",
+    type: "function",
+    detail: "Applique une majoration selon l'ancienneté",
+  }),
+  snippetCompletion("niveauDiplome()", {
+    label: "niveauDiplome",
+    type: "function",
+    detail: "Niveau du diplôme (I à V)",
+  }),
+  snippetCompletion("plafond(#{1:valeur}; #{2:maximum})", {
+    label: "plafond",
+    type: "function",
+    detail: "Limite une valeur à un maximum",
+  }),
+  snippetCompletion("plancher(#{1:valeur}; #{2:minimum})", {
+    label: "plancher",
+    type: "function",
+    detail: "Assure qu'une valeur ne soit pas inférieure à un minimum",
+  }),
+  snippetCompletion("appartientA(#{1:valeur}; #{2:valeur1}; #{3:valeur2}; #{4:...})", {
+    label: "appartientA",
+    type: "function",
+    detail: "Vérifie l'appartenance à une liste de valeurs",
+  }),
+  snippetCompletion("formatDate(#{1:date}; #{2:format})", {
+    label: "formatDate",
+    type: "function",
+    detail: "Formate une date",
+  }),
+  snippetCompletion("formatMontant(#{1:montant}; #{2:devise})", {
+    label: "formatMontant",
+    type: "function",
+    detail: "Formate un montant avec devise",
+  }),
+  snippetCompletion("base()=30", {
+    label: "base()=30",
+    type: "constant",
+    detail: "CNAM",
+  }),
+  snippetCompletion("base()=100", {
+    label: "base()=100",
+    type: "constant",
+    detail: "Diplôme de l'enseignement supérieur",
+  }),
+  snippetCompletion("edpDateObtention", {
+    label: "edpDateObtention",
+    type: "variable",
+    detail: "Date d'obtention du diplôme",
+  }),
+  snippetCompletion("typeDiplome", {
+    label: "typeDiplome",
+    type: "variable",
+    detail: "Type du diplôme",
+  }),
+];
 
 export function getDocumentation(suggestion: Completion): DocumentationInfo {
   switch (suggestion.label) {
