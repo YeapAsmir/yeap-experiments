@@ -1,46 +1,18 @@
 // Misc
-import React                from 'react';
-import CodeMirror           from '@uiw/react-codemirror';
-import {
-    useRef,
-    useMemo,
-    useState,
-    useEffect,
-    useCallback
-}                           from 'react';
-import { AutocompletionUI } from './components/AutocompletionUI';
-import { InfoBar }          from './components/InfoBar';
-import { CompletionState }  from './types';
-import {
-    allSuggestions,
-    getDocumentation
-}                           from './utils';
-import {
-    Completion,
-    closeBrackets,
-    autocompletion,
-    completionStatus,
-    CompletionContext
-}                           from '@codemirror/autocomplete';
-import {
-    history,
-    defaultKeymap,
-    historyKeymap,
-    indentWithTab
-}                           from '@codemirror/commands';
-import { javascript }       from '@codemirror/lang-javascript';
-import {
-    indentOnInput,
-    bracketMatching
-}                           from '@codemirror/language';
-import { StateField }       from '@codemirror/state';
-import {
-    keymap,
-    EditorView,
-    ViewPlugin,
-    lineNumbers
-}                           from '@codemirror/view';
-import { ayuLight }         from 'thememirror';
+import React from "react";
+import CodeMirror from "@uiw/react-codemirror";
+import { useRef, useMemo, useState, useEffect, useCallback } from "react";
+import { AutocompletionUI } from "./components/AutocompletionUI";
+import { InfoBar } from "./components/InfoBar";
+import { CompletionState } from "./types";
+import { allSuggestions, getDocumentation } from "./utils";
+import { Completion, closeBrackets, autocompletion, completionStatus, CompletionContext } from "@codemirror/autocomplete";
+import { history, defaultKeymap, historyKeymap, indentWithTab } from "@codemirror/commands";
+import { javascript } from "@codemirror/lang-javascript";
+import { indentOnInput, bracketMatching } from "@codemirror/language";
+import { StateField } from "@codemirror/state";
+import { keymap, EditorView, ViewPlugin, lineNumbers } from "@codemirror/view";
+import { ayuLight } from "thememirror";
 
 const getSuggestionsHeadless = (context: CompletionContext) => {
   const word = context.matchBefore(/\w+/);
@@ -157,6 +129,51 @@ const Counter = () => {
     return matchesCategory && matchesText;
   });
 
+  // Ouvrir le menu d'autocomplétion avec Ctrl+Espace
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Vérifiez si l'éditeur a le focus
+      if (editorRef.current && editorRef.current.contains(document.activeElement)) {
+        if (e.ctrlKey && e.code === "Space" && editorView) {
+          console.log("Ctrl+Space détecté via gestionnaire global");
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Utiliser le openCompletion ou directement manipuler l'état
+          const context = new CompletionContext(editorView.state, editorView.state.selection.main.head, true);
+          const result = getSuggestionsHeadless(context);
+
+          if (result && result.options.length > 0) {
+            const pos = editorView.coordsAtPos(result.from);
+            if (pos) {
+              const editorRect = editorView.dom.getBoundingClientRect();
+              setPosition({
+                top: pos.bottom - editorRect.top,
+                left: pos.left - editorRect.left,
+              });
+
+              setCompletionInfo({
+                active: true,
+                options: result.options,
+                selected: 0,
+                from: result.from,
+                to: editorView.state.selection.main.head,
+                explicitly: true,
+              });
+            }
+          }
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown, true); // true pour la phase de capture
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [editorView, setPosition, setCompletionInfo]);
+
+  // Appliquer la suggestion sélectionnée
   const applySuggestion = useCallback(
     (suggestion: Completion) => {
       if (!editorView || !completionInfo.active) return;
@@ -225,7 +242,6 @@ const Counter = () => {
     };
   }, [completionInfo.active, filteredSuggestions.length, completionInfo.selected, applySuggestion, filteredSuggestions]);
 
-  // L'effet pour gérer les clics à l'extérieur reste inchangé
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -268,7 +284,7 @@ const Counter = () => {
           overflow: "hidden",
           color: "#5c6166",
           borderRadius: "8px",
-          backgroundColor: "#fdfbfc"
+          backgroundColor: "#fdfbfc",
         },
         "&.cm-editor .cm-scroller": {
           outline: "none !important",
@@ -305,11 +321,7 @@ const Counter = () => {
       }),
 
       // Raccourcis clavier / commandes
-      keymap.of([
-        ...defaultKeymap,
-        ...historyKeymap,
-        indentWithTab,
-      ]),
+      keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
 
       // Hook pour la gestion des snippets / positionnement de l'UI de suggestion
       EditorView.updateListener.of((update) => {
@@ -360,14 +372,7 @@ const Counter = () => {
       <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
 
       <div className="relative flex-grow rounded-md border border-neutral-200" ref={editorRef}>
-        <CodeMirror
-          value={value}
-          onChange={onChange}
-          extensions={extensions}
-          className="outline-none border-none"
-          placeholder="Entrez votre code ici..."
-          basicSetup={false}
-        />
+        <CodeMirror value={value} onChange={onChange} extensions={extensions} className="outline-none border-none" placeholder="Entrez votre code ici..." basicSetup={false} />
 
         <AutocompletionUI
           completionInfo={completionInfo}
