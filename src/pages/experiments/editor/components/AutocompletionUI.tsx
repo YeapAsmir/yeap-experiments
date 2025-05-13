@@ -104,7 +104,12 @@ export function AutocompletionUI({
 
   const handleMouseLeave = () => {
     setHoveredIndex(null);
-    onHoverSuggestion(null);
+    // Ne réinitialise pas la documentation si une suggestion est sélectionnée
+    if (selectedSuggestion) {
+      onHoverSuggestion(selectedSuggestion);
+    } else {
+      onHoverSuggestion(null);
+    }
   };
 
   // 3. Écouter les changements de sélection par clavier
@@ -113,7 +118,7 @@ export function AutocompletionUI({
   }, [completionInfo.selected]);
 
   if (!completionInfo.active || completionInfo.options.length === 0) return null;
-  const docSuggestion = lastSelectionMethod === "hover" && hoveredIndex !== null ? filteredSuggestions[hoveredIndex] : selectedSuggestion;
+  const docSuggestion = hoveredIndex !== null ? filteredSuggestions[hoveredIndex] : selectedSuggestion;
   return (
     <div
       ref={suggestionsRef}
