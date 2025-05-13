@@ -128,31 +128,31 @@ export function AutocompletionUI({
         width: "auto",
       }}
     >
-      {/* En-tête avec catégories */}
-      {showCategories && (
+      {(showCategories || showSearchInput) && (
         <div className="px-1 pt-1">
-          <div className="flex overflow-x-auto gap-1">
-            {[
-              { id: "all", label: "Tous" },
-              { id: "function", label: "Fonctions" },
-              { id: "variable", label: "Variables" },
-              { id: "operator", label: "Opérateurs" },
-              { id: "constant", label: "Constantes" },
-            ].map((category) => (
-              <button
-                key={category.id}
-                className={cn(
-                  "outline-none px-2 py-1 text-sm text-slate-400 hover:text-slate-500 transition-all relative rounded-lg",
-                  activeCategory === category.id ? "bg-slate-100 text-slate-500" : "hover:bg-slate-100"
-                )}
-                onClick={() => setActiveCategory(category.id)}
-              >
-                {category.label}
-              </button>
-            ))}
-          </div>
+          {showCategories && (
+            <div className="flex overflow-x-auto gap-1">
+              {[
+                { id: "all", label: "Tous" },
+                { id: "function", label: "Fonctions" },
+                { id: "variable", label: "Variables" },
+                { id: "operator", label: "Opérateurs" },
+                { id: "constant", label: "Constantes" },
+              ].map((category) => (
+                <button
+                  key={category.id}
+                  className={cn(
+                    "outline-none px-2 py-1 text-sm text-slate-400 hover:text-slate-500 transition-all relative rounded-lg",
+                    activeCategory === category.id ? "bg-slate-100 text-slate-500" : "hover:bg-slate-100"
+                  )}
+                  onClick={() => setActiveCategory(category.id)}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+          )}
 
-          {/* Barre de recherche */}
           {showSearchInput && filteredSuggestions.length > 0 && (
             <div className="pt-1 relative">
               <input

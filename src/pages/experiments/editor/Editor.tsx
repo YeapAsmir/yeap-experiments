@@ -1,49 +1,19 @@
 // Misc
-import React                from 'react';
-import CodeMirror           from '@uiw/react-codemirror';
-import {
-    useRef,
-    useMemo,
-    useState,
-    useEffect,
-    useCallback
-}                           from 'react';
-import { AutocompletionUI } from './components/AutocompletionUI';
-import {
-    CompletionState,
-    DocumentationInfo
-}                           from './types';
-import {
-    allSuggestions,
-    getDocumentation
-}                           from './utils';
-import {
-    Completion,
-    closeBrackets,
-    autocompletion,
-    completionStatus,
-    CompletionContext
-}                           from '@codemirror/autocomplete';
-import {
-    history,
-    defaultKeymap,
-    historyKeymap,
-    indentWithTab
-}                           from '@codemirror/commands';
-import { javascript }       from '@codemirror/lang-javascript';
-import {
-    indentOnInput,
-    bracketMatching
-}                           from '@codemirror/language';
-import { StateField }       from '@codemirror/state';
-import {
-    keymap,
-    EditorView,
-    ViewPlugin,
-    lineNumbers
-}                           from '@codemirror/view';
-import { useHotkeys }       from 'react-hotkeys-hook';
-import { ayuLight }         from 'thememirror';
+import React from "react";
+import CodeMirror from "@uiw/react-codemirror";
+import { useRef, useMemo, useState, useEffect, useCallback } from "react";
+import { AutocompletionUI } from "./components/AutocompletionUI";
+import { CompletionState, DocumentationInfo } from "./types";
+import { allSuggestions, getDocumentation } from "./utils";
+import { Completion, closeBrackets, autocompletion, completionStatus, CompletionContext } from "@codemirror/autocomplete";
+import { history, defaultKeymap, historyKeymap, indentWithTab } from "@codemirror/commands";
+import { javascript } from "@codemirror/lang-javascript";
+import { indentOnInput, bracketMatching } from "@codemirror/language";
+import { StateField } from "@codemirror/state";
+import { keymap, EditorView, ViewPlugin, lineNumbers } from "@codemirror/view";
+import { useHotkeys } from "react-hotkeys-hook";
+import { ayuLight } from "thememirror";
+import UIOptionsCheckbox from "./components/UIOptionsCheckbox";
 
 const getSuggestionsHeadless = (context: CompletionContext) => {
   // Rechercher les mots alphanumériques
@@ -118,7 +88,13 @@ export default function PayrollEditorCustomUI() {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [activeCategory, setActiveCategory] = useState("all");
   const [filterText, setFilterText] = useState("");
-
+  const [uiOptions, setUiOptions] = useState({
+    showCategories: false,
+    showSearchInput: false,
+    showSuggestionDetail: false,
+    showIconForType: false,
+    showInfoBar: true,
+  });
   const suggestionsRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const editorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
 
@@ -215,6 +191,13 @@ export default function PayrollEditorCustomUI() {
     },
     [selectedSuggestion]
   );
+
+  const handleToggleOption = useCallback((optionId, value) => {
+    setUiOptions((prev) => ({
+      ...prev,
+      [optionId]: value,
+    }));
+  }, []);
 
   const extensions = useMemo(
     () => [
@@ -416,6 +399,10 @@ export default function PayrollEditorCustomUI() {
   return (
     <div className="max-w-2xl mx-auto flex flex-col w-full gap-4">
       <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
+      <UIOptionsCheckbox
+        {...uiOptions}
+        onToggleOption={handleToggleOption}
+      />
       <div className="relative flex-grow rounded-md border border-neutral-200" ref={editorRef}>
         <CodeMirror value={value} onChange={onChange} extensions={extensions} className="outline-none border-none" placeholder="Entrez votre code ici..." basicSetup={false} />
         <AutocompletionUI
@@ -426,11 +413,12 @@ export default function PayrollEditorCustomUI() {
           filteredSuggestions={filteredSuggestions}
           documentation={activeDocumentation}
           selectedSuggestion={selectedSuggestion}
-          showCategories={false}
-          showSearchInput={false}
-          showSuggestionDetail={false}
-          showIconForType={false}
-          showInfoBar={true}
+          // Utilisation des options UI dynamiques
+          showCategories={uiOptions.showCategories}
+          showSearchInput={uiOptions.showSearchInput}
+          showSuggestionDetail={uiOptions.showSuggestionDetail}
+          showIconForType={uiOptions.showIconForType}
+          showInfoBar={uiOptions.showInfoBar}
           setActiveCategory={setActiveCategory}
           setFilterText={setFilterText}
           setCompletionInfo={setCompletionInfo}
