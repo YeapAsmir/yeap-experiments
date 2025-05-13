@@ -1,36 +1,73 @@
 // Misc
-import React from "react";
-import CodeMirror from "@uiw/react-codemirror";
-import { useRef, useMemo, useState, useEffect, useCallback } from "react";
-import { AutocompletionUI } from "./components/AutocompletionUI";
-import { InfoBar } from "./components/InfoBar";
-import { CompletionState } from "./types";
-import { allSuggestions, getDocumentation } from "./utils";
-import { Completion, closeBrackets, autocompletion, completionStatus, CompletionContext } from "@codemirror/autocomplete";
-import { history, defaultKeymap, historyKeymap, indentWithTab } from "@codemirror/commands";
-import { javascript } from "@codemirror/lang-javascript";
-import { indentOnInput, bracketMatching } from "@codemirror/language";
-import { StateField } from "@codemirror/state";
-import { keymap, EditorView, ViewPlugin, lineNumbers } from "@codemirror/view";
-import { ayuLight } from "thememirror";
+import React                from 'react';
+import CodeMirror           from '@uiw/react-codemirror';
+import {
+    useRef,
+    useMemo,
+    useState,
+    useEffect,
+    useCallback
+}                           from 'react';
+import { AutocompletionUI } from './components/AutocompletionUI';
+import {
+    CompletionState,
+    DocumentationInfo
+}                           from './types';
+import {
+    allSuggestions,
+    getDocumentation
+}                           from './utils';
+import {
+    Completion,
+    closeBrackets,
+    autocompletion,
+    completionStatus,
+    CompletionContext
+}                           from '@codemirror/autocomplete';
+import {
+    history,
+    defaultKeymap,
+    historyKeymap,
+    indentWithTab
+}                           from '@codemirror/commands';
+import { javascript }       from '@codemirror/lang-javascript';
+import {
+    indentOnInput,
+    bracketMatching
+}                           from '@codemirror/language';
+import { StateField }       from '@codemirror/state';
+import {
+    keymap,
+    EditorView,
+    ViewPlugin,
+    lineNumbers
+}                           from '@codemirror/view';
+import { useHotkeys }       from 'react-hotkeys-hook';
+import { ayuLight }         from 'thememirror';
 
 const getSuggestionsHeadless = (context: CompletionContext) => {
+  // Rechercher les mots alphanumériques
   const word = context.matchBefore(/\w+/);
-  if (!word && !context.explicit) return null;
+  // Rechercher les symboles (|, &, =, !, etc.)
+  const symbol = context.matchBefore(/[|&=!.+]+/);
 
-  const wordText = word ? word.text.toLowerCase() : "";
+  // Si ni mot ni symbole n'est trouvé et que ce n'est pas explicite, ne rien retourner
+  if (!word && !symbol && !context.explicit) return null;
+
+  // Détermine le texte à utiliser pour la recherche
+  const match = word || symbol;
+  const matchText = match ? match.text.toLowerCase() : "";
 
   // Filtrer les suggestions selon le texte saisi
-  const filteredSuggestions = word ? allSuggestions.filter((s) => s.label.toLowerCase().startsWith(wordText)) : allSuggestions;
+  const filteredSuggestions = match ? allSuggestions.filter((s) => s.label.toLowerCase().startsWith(matchText)) : allSuggestions;
 
   return {
-    from: word ? word.from : context.pos,
+    from: match ? match.from : context.pos,
     options: filteredSuggestions,
-    span: word || /\w*/,
+    span: match || /[\w|&=!.+]*/,
   };
 };
 
-// L'état personnalisé reste inchangé
 const customCompletionState = StateField.define<CompletionState>({
   create(): CompletionState {
     return {
@@ -68,14 +105,7 @@ const customCompletionState = StateField.define<CompletionState>({
 });
 
 export default function PayrollEditorCustomUI() {
-  const [value, setValue] = useState(`import React, {useState} from 'react';
-
-// My favorite component
-const Counter = () => {
-  const [value, setValue] = useState(0);
-
-  return <span>{value}</span>;
-};`);
+  const [value, setValue] = useState();
   const [editorView, setEditorView] = useState<EditorView | null>(null);
   const [completionInfo, setCompletionInfo] = useState<CompletionState>({
     active: false,
@@ -88,10 +118,10 @@ const Counter = () => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [activeCategory, setActiveCategory] = useState("all");
   const [filterText, setFilterText] = useState("");
-  const suggestionsRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
-  const editorRef = useRef<HTMLDivElement>(null);
 
-  // Le plugin personnalisé reste inchangé
+  const suggestionsRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+  const editorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
+
   const customPlugin = ViewPlugin.fromClass(
     class {
       view: EditorView;
@@ -122,58 +152,12 @@ const Counter = () => {
     }
   );
 
-  // Filtrer les suggestions selon la catégorie et le texte de filtre
   const filteredSuggestions = completionInfo.options.filter((suggestion) => {
     const matchesCategory = activeCategory === "all" || suggestion.type === activeCategory;
     const matchesText = !filterText || suggestion.label.toLowerCase().includes(filterText.toLowerCase()) || (suggestion.detail && suggestion.detail.toLowerCase().includes(filterText.toLowerCase()));
     return matchesCategory && matchesText;
   });
 
-  // Ouvrir le menu d'autocomplétion avec Ctrl+Espace
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Vérifiez si l'éditeur a le focus
-      if (editorRef.current && editorRef.current.contains(document.activeElement)) {
-        if (e.ctrlKey && e.code === "Space" && editorView) {
-          console.log("Ctrl+Space détecté via gestionnaire global");
-          e.preventDefault();
-          e.stopPropagation();
-
-          // Utiliser le openCompletion ou directement manipuler l'état
-          const context = new CompletionContext(editorView.state, editorView.state.selection.main.head, true);
-          const result = getSuggestionsHeadless(context);
-
-          if (result && result.options.length > 0) {
-            const pos = editorView.coordsAtPos(result.from);
-            if (pos) {
-              const editorRect = editorView.dom.getBoundingClientRect();
-              setPosition({
-                top: pos.bottom - editorRect.top,
-                left: pos.left - editorRect.left,
-              });
-
-              setCompletionInfo({
-                active: true,
-                options: result.options,
-                selected: 0,
-                from: result.from,
-                to: editorView.state.selection.main.head,
-                explicitly: true,
-              });
-            }
-          }
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown, true); // true pour la phase de capture
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown, true);
-    };
-  }, [editorView, setPosition, setCompletionInfo]);
-
-  // Appliquer la suggestion sélectionnée
   const applySuggestion = useCallback(
     (suggestion: Completion) => {
       if (!editorView || !completionInfo.active) return;
@@ -200,48 +184,6 @@ const Counter = () => {
     [editorView, completionInfo, setCompletionInfo, setFilterText]
   );
 
-  // Ajoutez cet useEffect à votre composant
-  useEffect(() => {
-    // Cette fonction gère les événements clavier au niveau de la fenêtre
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      if (!completionInfo.active || filteredSuggestions.length === 0) return;
-
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setCompletionInfo((prev) => ({
-          ...prev,
-          selected: (prev.selected + 1) % filteredSuggestions.length,
-        }));
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setCompletionInfo((prev) => ({
-          ...prev,
-          selected: prev.selected > 0 ? prev.selected - 1 : filteredSuggestions.length - 1,
-        }));
-      } else if (e.key === "Enter" || e.key === "Tab") {
-        // Uniquement si le menu d'autocomplétion est actif
-        if (completionInfo.active && filteredSuggestions.length > 0) {
-          e.preventDefault();
-          applySuggestion(filteredSuggestions[completionInfo.selected]);
-        }
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        setCompletionInfo((prev) => ({ ...prev, active: false }));
-        setFilterText("");
-      }
-    };
-
-    // Ajouter l'écouteur d'événement quand le menu d'autocomplétion est actif
-    if (completionInfo.active && filteredSuggestions.length > 0) {
-      window.addEventListener("keydown", handleGlobalKeyDown, true);
-    }
-
-    // Nettoyer correctement l'écouteur d'événement
-    return () => {
-      window.removeEventListener("keydown", handleGlobalKeyDown, true);
-    };
-  }, [completionInfo.active, filteredSuggestions.length, completionInfo.selected, applySuggestion, filteredSuggestions]);
-
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -257,10 +199,22 @@ const Counter = () => {
     };
   }, []);
 
-  // Obtenir la documentation pour la suggestion sélectionnée
   const selectedSuggestion = filteredSuggestions[completionInfo.selected] || (filteredSuggestions.length > 0 ? filteredSuggestions[0] : null);
-  const documentation = selectedSuggestion ? getDocumentation(selectedSuggestion) : null;
+  const [activeDocumentation, setActiveDocumentation] = useState<DocumentationInfo | null>(null);
   const onChange = useCallback((value) => setValue(value), []);
+
+  const setActiveSuggestion = useCallback(
+    (suggestion: Completion | null) => {
+      if (suggestion && selectedSuggestion && suggestion.label === selectedSuggestion.label) {
+        setActiveDocumentation(getDocumentation(suggestion));
+      } else if (suggestion) {
+        setActiveDocumentation(getDocumentation(suggestion));
+      } else {
+        setActiveDocumentation(null);
+      }
+    },
+    [selectedSuggestion]
+  );
 
   const extensions = useMemo(
     () => [
@@ -330,7 +284,8 @@ const Counter = () => {
           let shouldActivateCompletion = false;
           changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
             const text = inserted.toString();
-            if (text.length === 1 && /[a-zA-Z]/.test(text)) {
+            // Modifiez cette ligne pour inclure les symboles
+            if (text.length === 1 && (/[a-zA-Z]/.test(text) || /[|&=!.+]/.test(text))) {
               shouldActivateCompletion = true;
             }
           });
@@ -367,20 +322,109 @@ const Counter = () => {
     ],
     []
   );
+
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    const handleSuggestionNavigation = (e) => {
+      if (!completionInfo.active || filteredSuggestions.length === 0) return;
+
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setCompletionInfo((prev) => {
+          const newSelected = e.key === "ArrowDown" ? (prev.selected + 1) % filteredSuggestions.length : prev.selected > 0 ? prev.selected - 1 : filteredSuggestions.length - 1;
+
+          setActiveDocumentation(getDocumentation(filteredSuggestions[newSelected]));
+
+          return {
+            ...prev,
+            selected: newSelected,
+          };
+        });
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        e.stopPropagation();
+        applySuggestion(filteredSuggestions[completionInfo.selected]);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        setCompletionInfo((prev) => ({ ...prev, active: false }));
+        setFilterText("");
+
+        setTimeout(() => {
+          editorView?.focus();
+        }, 0);
+      }
+    };
+
+    document.addEventListener("keydown", handleSuggestionNavigation, { capture: true });
+
+    return () => {
+      document.removeEventListener("keydown", handleSuggestionNavigation, { capture: true });
+    };
+  }, [completionInfo.active, filteredSuggestions, completionInfo.selected, applySuggestion, editorView]);
+
+  useEffect(() => {
+    if (selectedSuggestion) {
+      setActiveDocumentation(getDocumentation(selectedSuggestion));
+    } else {
+      setActiveDocumentation(null);
+    }
+  }, [selectedSuggestion]);
+
+  useHotkeys(
+    "ctrl+space",
+    (e) => {
+      e.preventDefault();
+
+      if (editorView) {
+        console.log("Ctrl+Space detected via useHotkeys");
+
+        const context = new CompletionContext(editorView.state, editorView.state.selection.main.head, true);
+        const result = getSuggestionsHeadless(context);
+
+        if (result && result.options.length > 0) {
+          const pos = editorView.coordsAtPos(result.from);
+          if (pos) {
+            const editorRect = editorView.dom.getBoundingClientRect();
+            setPosition({
+              top: pos.bottom - editorRect.top,
+              left: pos.left - editorRect.left,
+            });
+
+            setCompletionInfo({
+              active: true,
+              options: result.options,
+              selected: 0,
+              from: result.from,
+              to: editorView.state.selection.main.head,
+              explicitly: true,
+            });
+          }
+        }
+      }
+    },
+    {
+      enableOnContentEditable: true,
+      preventDefault: true,
+    },
+    [editorView]
+  );
+
   return (
     <div className="max-w-2xl mx-auto flex flex-col w-full gap-4">
       <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
-
       <div className="relative flex-grow rounded-md border border-neutral-200" ref={editorRef}>
         <CodeMirror value={value} onChange={onChange} extensions={extensions} className="outline-none border-none" placeholder="Entrez votre code ici..." basicSetup={false} />
-
         <AutocompletionUI
           completionInfo={completionInfo}
           position={position}
           activeCategory={activeCategory}
           filterText={filterText}
           filteredSuggestions={filteredSuggestions}
-          documentation={documentation}
+          documentation={activeDocumentation}
           selectedSuggestion={selectedSuggestion}
           showCategories={false}
           showSearchInput={false}
@@ -392,10 +436,19 @@ const Counter = () => {
           setCompletionInfo={setCompletionInfo}
           applySuggestion={applySuggestion}
           suggestionsRef={suggestionsRef}
+          editorRef={editorRef}
+          onHoverSuggestion={setActiveSuggestion}
         />
       </div>
-
-      <InfoBar />
+      <div className="p-3 bg-[#fdfbfc] rounded-md border border-neutral-200">
+        <div className="text-xs text-gray-700">
+          <p className="font-semibold mb-1 text-black space-y-1">Fonctionnalités sympatoche :</p>
+          <p>• Navigation intuitive avec les flèches ↑/↓ et sélection avec Enter</p>
+          <p>• Filtrage par catégorie et recherche textuelle</p>
+          <p>• Documentation détaillée et exemples d'utilisation</p>
+          <p>• Activation automatique pendant la frappe ou avec Ctrl+Space</p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -87,6 +87,26 @@ export const allSuggestions = [
     type: "operator",
     detail: "Différent",
   }),
+  snippetCompletion(" .. ", {
+    label: "..",
+    type: "operator",
+    detail: "Plage de valeurs",
+  }),
+  snippetCompletion(" || ", {
+    label: "||",
+    type: "operator",
+    detail: "OU logique",
+  }),
+  snippetCompletion(" , ", {
+    label: ",",
+    type: "operator",
+    detail: "ET logique",
+  }),
+  snippetCompletion(" && ", {
+    label: "&&",
+    type: "operator",
+    detail: "ET logique",
+  }),
   snippetCompletion("concat(#{1:texte1}; #{2:texte2}; #{3:...})", {
     label: "concat",
     type: "function",
@@ -220,6 +240,30 @@ export function getDocumentation(suggestion: Completion): DocumentationInfo {
         description: 'Montant de la prime versée.',
         syntax: 'edpMontant',
         example: 'somme(base(); edpMontant)'
+      };
+    case '..':
+      return {
+        description: 'Opérateur de plage. Utilisé pour créer des plages de valeurs.',
+        syntax: 'valeur1..valeur2',
+        example: '1..10'
+      };
+    case '||':
+      return {
+        description: 'Opérateur logique OU. Retourne vrai si au moins une des expressions est vraie.',
+        syntax: 'expression1 || expression2',
+        example: 'si(edpMontant > 1000 || edpCommentaire != ""; "Prime élevée"; "Prime normale")'
+      };
+    case ',':
+      return {
+        description: 'Opérateur logique ET. Retourne vrai si les deux expressions sont vraies.',
+        syntax: 'expression1, expression2',
+        example: 'si(edpMontant > 1000, edpCommentaire != ""; "Prime élevée avec commentaire"; "Prime normale")'
+      };
+    case '&&':
+      return {
+        description: 'Opérateur logique ET. Retourne vrai si les deux expressions sont vraies.',
+        syntax: 'expression1 && expression2',
+        example: 'si(edpMontant > 1000 && edpCommentaire != ""; "Prime élevée"; "Prime normale")'
       };
     case '+':
       return {
