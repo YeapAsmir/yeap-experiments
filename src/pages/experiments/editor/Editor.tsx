@@ -265,9 +265,22 @@ export default function PayrollEditorCustomUI() {
         if (update.docChanged) {
           const changes = update.changes;
           let shouldActivateCompletion = false;
+
+          // Vérifier s'il y a du texte avant la position du curseur
+          const cursor = update.state.selection.main.head;
+          const line = update.state.doc.lineAt(cursor);
+          const lineText = line.text.substring(0, cursor - line.from);
+
+          // Activer les suggestions si:
+          // 1. Il y a du texte avant le curseur (pour ne pas activer à une ligne vide)
+          // 2. Le texte correspond à un motif alphanumérique ou un symbole spécial
+          if (lineText.length > 0 && (/\w+$/.test(lineText) || /[|&=!.+]+$/.test(lineText))) {
+            shouldActivateCompletion = true;
+          }
+
+          // Vérifier également si un caractère vient d'être ajouté (comportement original)
           changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
             const text = inserted.toString();
-            // Modifiez cette ligne pour inclure les symboles
             if (text.length === 1 && (/[a-zA-Z]/.test(text) || /[|&=!.+]/.test(text))) {
               shouldActivateCompletion = true;
             }
@@ -298,6 +311,9 @@ export default function PayrollEditorCustomUI() {
                   left: pos.left - editorRect.left,
                 });
               }
+            } else {
+              // Si aucune suggestion n'est trouvée, fermer l'UI de suggestion
+              setCompletionInfo((prev) => ({ ...prev, active: false }));
             }
           }
         }
@@ -399,10 +415,7 @@ export default function PayrollEditorCustomUI() {
   return (
     <div className="max-w-2xl mx-auto flex flex-col w-full gap-4">
       <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
-      <UIOptionsCheckbox
-        {...uiOptions}
-        onToggleOption={handleToggleOption}
-      />
+      <UIOptionsCheckbox {...uiOptions} onToggleOption={handleToggleOption} />
       <div className="relative flex-grow rounded-md border border-neutral-200" ref={editorRef}>
         <CodeMirror value={value} onChange={onChange} extensions={extensions} className="outline-none border-none" placeholder="Entrez votre code ici..." basicSetup={false} />
         <AutocompletionUI

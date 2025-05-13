@@ -134,7 +134,7 @@ export function AutocompletionUI({
       }}
     >
       {(showCategories || showSearchInput) && (
-        <div className="px-1 pt-1">
+        <div className="flex gap-1 px-1 pt-1">
           {showCategories && (
             <div className="flex overflow-x-auto gap-1">
               {[
@@ -159,7 +159,7 @@ export function AutocompletionUI({
           )}
 
           {showSearchInput && filteredSuggestions.length > 0 && (
-            <div className="pt-1 relative">
+            <div className="relative w-full">
               <input
                 type="text"
                 placeholder="Filtrer les suggestions..."
