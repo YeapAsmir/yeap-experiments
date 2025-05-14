@@ -410,7 +410,7 @@ const TagVisualizer: FC = () => {
         </div>
       </div>
 
-      <div className="p-3 bg-[#fdfbfc] rounded-md border border-neutral-200">
+      <div className="p-3 bg-[#f1f1f1] rounded-md border border-neutral-200">
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-semibold text-sm mb-1 text-black space-y-1">Structure de l'AST</h2>
           <div className="flex space-x-4">

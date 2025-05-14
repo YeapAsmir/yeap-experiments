@@ -26,13 +26,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <div className="max-w-2xl mx-auto flex items-center w-full py-4 gap-4">
-        <SvgIcon className="size-5 text-slate-300" />
+        <SvgIcon className="size-5 text-gray-10" />
         <nav className="flex ml-auto gap-1 text-sm">
           {navItems.map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) => cn("px-2.5 py-1 rounded-full transition-colors", isActive ? "bg-slate-800 text-white shadow-sm" : "text-neutral-600 hover:bg-neutral-200")}
+              className={({ isActive }) => cn("px-2.5 py-1 rounded-full transition-colors", isActive ? "bg-gray-15 text-white shadow-sm" : "text-gray-12 hover:bg-gray-7")}
             >
               {label}
             </NavLink>

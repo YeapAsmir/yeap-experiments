@@ -28,6 +28,17 @@ interface AutocompletionUIProps {
   onHoverSuggestion?: (suggestion: Completion | null) => void;
 }
 
+const SearchIcon = () => (
+  <svg viewBox="0 0 20 20" className="size-5">
+    <path
+      fillRule="evenodd"
+      d="M12.323 13.383a5.5 5.5 0 1 1 1.06-1.06l2.897 2.897a.75.75 0 1 1-1.06 1.06zM13 9a4 4 0 1 1-8 0 4 4 0 0 1 8 0"
+    ></path>
+  </svg>
+);
+
+export default SearchIcon;
+
 export function AutocompletionUI({
   completionInfo,
   position,
@@ -122,7 +133,7 @@ export function AutocompletionUI({
   return (
     <div
       ref={suggestionsRef}
-      className="flex flex-col bg-white  rounded-lg overflow-hidden font-sans min-w-[360px] max-h-[300px] shadow-[0px_0px_0px_1px_rgba(0,0,0,0.06),0px_1px_1px_-0.5px_rgba(0,0,0,0.06),0px_3px_3px_-1.5px_rgba(0,0,0,0.06),_0px_6px_6px_-3px_rgba(0,0,0,0.06),0px_12px_12px_-6px_rgba(0,0,0,0.06),0px_24px_24px_-12px_rgba(0,0,0,0.06)]"
+      className="flex flex-col bg-white rounded-md overflow-hidden font-sans min-w-[360px] max-h-[300px] shadow-bevel-xs"
       style={{
         position: "absolute",
         top: `${position.top}px`,
@@ -134,11 +145,11 @@ export function AutocompletionUI({
       }}
     >
       {(showCategories || showSearchInput) && (
-        <div className="flex gap-1 px-1 pt-1">
+        <div className={cn('flex gap-2 p-2 pb-0')}>
           {showCategories && (
             <div className="flex overflow-x-auto gap-1">
               {[
-                { id: "all", label: "Tous" },
+                { id: "all", label: "All" },
                 { id: "function", label: "Fonctions" },
                 { id: "variable", label: "Variables" },
                 { id: "operator", label: "Opérateurs" },
@@ -147,8 +158,8 @@ export function AutocompletionUI({
                 <button
                   key={category.id}
                   className={cn(
-                    "outline-none px-2 py-1 text-sm text-slate-400 hover:text-slate-500 transition-all relative rounded-lg",
-                    activeCategory === category.id ? "bg-slate-100 text-slate-500" : "hover:bg-slate-100"
+                    "outline-none px-3 py-1 text-xs text-gray-14 h-700 font-medium transition-all relative rounded-sm",
+                    activeCategory === category.id ? "bg-gray-7" : "hover:bg-black/5"
                   )}
                   onClick={() => setActiveCategory(category.id)}
                 >
@@ -158,12 +169,15 @@ export function AutocompletionUI({
             </div>
           )}
 
-          {showSearchInput && filteredSuggestions.length > 0 && (
+          {showSearchInput && (
             <div className="relative w-full">
+              <span className="absolute top-1/2 left-2 -translate-y-1/2 text-gray-12">
+                <SearchIcon />
+              </span>
               <input
                 type="text"
-                placeholder="Filtrer les suggestions..."
-                className="w-full px-2 py-1 text-sm rounded-lg bg-white border border-slate-100 ring-0 outline-none"
+                placeholder="Searching in all"
+                className="w-full px-3 pl-8 placeholder:text-gray-13 py-1.5 h-7 text-sm rounded-sm bg-white focus:bg-gray-4 ring-0 focus:ring-2 ring-focus outline-none"
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
               />
@@ -173,21 +187,21 @@ export function AutocompletionUI({
       )}
 
       {/* Conteneur principal */}
-      <div className="flex h-full overflow-auto w-full p-1 gap-1">
+      <div className="flex h-full overflow-auto w-full p-2 gap-1">
         {/* Liste des suggestions */}
-        <div ref={listContainerRef} className={cn("w-full overflow-y-auto no-scrollbar", filteredSuggestions.length > 0 ? "max-w-52" : "w-full")}>
+        <div ref={listContainerRef} className={cn("w-full flex flex-col gap-1 overflow-y-auto no-scrollbar", filteredSuggestions.length > 0 ? "max-w-52" : "w-full")}>
           {filteredSuggestions.length > 0 ? (
             filteredSuggestions.map((suggestion, index) => (
-              <div
-                key={suggestion.label}
-                ref={(el) => {
-                  itemRefs.current[index] = el;
-                }}
-                className={`flex relative items-center p-2 rounded-md cursor-pointer transition-all ${index === completionInfo.selected ? "bg-slate-100" : "hover:bg-slate-50/80"}`}
-                onClick={() => applySuggestion(suggestion)}
-                onMouseEnter={() => handleMouseEnter(index)}
-                onMouseLeave={handleMouseLeave}
-              >
+                <div
+                  key={suggestion.label}
+                  ref={(el) => {
+                    itemRefs.current[index] = el;
+                  }}
+                  className={`flex relative items-center p-2 rounded-sm cursor-pointer ${index === completionInfo.selected ? "bg-gray-7" : "hover:bg-gray-6"}`}
+                  onClick={() => applySuggestion(suggestion)}
+                  onMouseEnter={() => handleMouseEnter(index)}
+                  onMouseLeave={handleMouseLeave}
+                >
                 {showIconForType && (
                   <span
                     className={`inline-flex shrink-0 mt-.5 items-center justify-center w-4 h-4 rounded mr-2 text-[0.625rem] font-medium ${
@@ -206,16 +220,16 @@ export function AutocompletionUI({
                   </span>
                 )}
                 <div className="flex flex-col">
-                  <span className="text-xs text-slate-700 font-mono">{suggestion.label}</span>
-                  {showSuggestionDetail && <span className="text-xs text-slate-400 mt-2">{suggestion.detail}</span>}
+                  <span className="text-xs text-gray-15 font-mono">{suggestion.label}</span>
+                  {showSuggestionDetail && <span className="text-xs text-gray-12 mt-2">{suggestion.detail}</span>}
                 </div>
-                {index === completionInfo.selected && (
-                  <kbd className="absolute right-1 mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">Enter</kbd>
-                )}
+                {/* {index === completionInfo.selected && (
+                  <kbd className="absolute right-1 mx-0.5 text-gray-12 bg-white inline-flex h-5 max-h-full items-center rounded-sm border px-1 font-[inherit] text-[0.625rem] font-medium">Enter</kbd>
+                )} */}
               </div>
             ))
           ) : (
-            <div className="text-xs p-4 text-slate-400 text-center">Aucune suggestion trouvée</div>
+            <div className="text-xs p-4 text-gray-12 text-center">Aucune suggestion trouvée</div>
           )}
         </div>
 
@@ -223,34 +237,30 @@ export function AutocompletionUI({
         <div className="grow flex flex-col justify-between gap-y-2">
           {docSuggestion && (
             <div className="grow">
-              <div className="p-4 overflow-y-auto flex flex-col gap-1 rounded-lg bg-slate-50">
-                <h3 className="text-sm font-mono font-semibold text-black">{docSuggestion?.label}</h3>
+              <div className="p-2 overflow-y-auto flex flex-col gap-1 rounded-lg bg-gray-4">
+                <h3 className="text-sm font-mono font-semibold text-gray-15">{docSuggestion?.label}</h3>
                 {documentation ? (
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    {/* Avertissement conditionnels sur le désalignement potentiel */}
-                    {/* {hoveredIndex !== null && <span className="text-xs text-amber-500 block mb-1">Documentation pour la sélection actuelle. Utilisez les flèches pour mettre à jour.</span>} */}
+                  <p className="text-xs text-gray-12 leading-relaxed">
                     {documentation.description}
                   </p>
                 ) : (
-                  <p className="text-xs text-slate-500 leading-relaxed">Aucune documentation disponible</p>
+                  <p className="text-xs text-gray-12 leading-relaxed">Aucune documentation disponible</p>
                 )}
               </div>
             </div>
           )}
           {showInfoBar && filteredSuggestions.length > 0 && (
-            <div className="px-2 py-1">
-              <div className="flex gap-2 items-center flex-wrap text-xs text-slate-500">
+              <div className="flex gap-2 items-center flex-wrap text-xs text-gray-12">
                 <span>
-                  <kbd className="mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">↑</kbd>
-                  <kbd className="mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">↓</kbd> Navigation
+                  <kbd className="mx-0.5 text-gray-12 bg-white inline-flex h-5 max-h-full items-center rounded-sm border px-1 font-[inherit] text-[0.625rem] font-medium">↑</kbd>
+                  <kbd className="mx-0.5 text-gray-12 bg-white inline-flex h-5 max-h-full items-center rounded-sm border px-1 font-[inherit] text-[0.625rem] font-medium">↓</kbd> Navigation
                 </span>
                 <span>
-                  <kbd className="mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">Enter</kbd> Sélectionner
+                  <kbd className="mx-0.5 text-gray-12 bg-white inline-flex h-5 max-h-full items-center rounded-sm border px-1 font-[inherit] text-[0.625rem] font-medium">Enter</kbd> Sélectionner
                 </span>
                 <span>
-                  <kbd className="mx-0.5 text-slate-500 bg-white inline-flex h-5 max-h-full items-center rounded-md border px-1 font-[inherit] text-[0.625rem] font-medium">Esc</kbd> Fermer
+                  <kbd className="mx-0.5 text-gray-12 bg-white inline-flex h-5 max-h-full items-center rounded-sm border px-1 font-[inherit] text-[0.625rem] font-medium">Esc</kbd> Fermer
                 </span>
-              </div>
             </div>
           )}
         </div>

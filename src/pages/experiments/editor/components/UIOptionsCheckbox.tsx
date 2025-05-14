@@ -28,8 +28,8 @@ export const UIOptionsCheckbox = ({
   ];
 
   return (
-    <div className="bg-white grid gap-3 rounded-md p-3 border border-neutral-200">
-      <h3 className="text-sm font-semibold text-gray-700">Options d'affichage</h3>
+      <div className="p-3 bg-white flex flex-col gap-2 rounded-md shadow-bevel-xs">
+          <p className="font-semibold text-sm">Fonctionnalités</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {options.map((option) => (
           <div key={option.id} className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export const UIOptionsCheckbox = ({
               data-slot="checkbox"
               className={`peer size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] focus-visible:border-ring focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 ${
                 option.checked 
-                  ? "bg-blue-600 border-blue-600 text-white" 
+                  ? "bg-gray-16 border-gray-16 text-white" 
                   : "border-gray-300 bg-white"
               }`}
               onClick={() => onToggleOption(option.id, !option.checked)}

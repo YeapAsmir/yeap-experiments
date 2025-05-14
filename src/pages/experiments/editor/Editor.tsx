@@ -217,11 +217,12 @@ export default function PayrollEditorCustomUI() {
       // Customisation de l'UI
       EditorView.theme({
         "&.cm-editor": {
+          border: "1px solid #e5e5e5",
           height: "200px",
           overflow: "hidden",
           color: "#5c6166",
-          borderRadius: "8px",
-          backgroundColor: "#fdfbfc",
+          borderRadius: "8px !important",
+          backgroundColor: "#f1f1f1",
         },
         "&.cm-editor .cm-scroller": {
           outline: "none !important",
@@ -235,7 +236,7 @@ export default function PayrollEditorCustomUI() {
           outline: "none !important",
         },
         ".cm-gutters": {
-          backgroundColor: "transparent",
+          backgroundColor: "transparent !important",
           borderRight: "none",
         },
         ".cm-gutterElement": {
@@ -416,7 +417,7 @@ export default function PayrollEditorCustomUI() {
     <div className="max-w-2xl mx-auto flex flex-col w-full gap-4">
       <h2 className="text-sm font-semibold text-gray-700">Éditeur avec UI d'autocomplétion personnalisée</h2>
       <UIOptionsCheckbox {...uiOptions} onToggleOption={handleToggleOption} />
-      <div className="relative flex-grow rounded-md border border-neutral-200" ref={editorRef}>
+      <div className="relative flex-grow" ref={editorRef}>
         <CodeMirror value={value} onChange={onChange} extensions={extensions} className="outline-none border-none" placeholder="Entrez votre code ici..." basicSetup={false} />
         <AutocompletionUI
           completionInfo={completionInfo}
@@ -441,13 +442,15 @@ export default function PayrollEditorCustomUI() {
           onHoverSuggestion={setActiveSuggestion}
         />
       </div>
-      <div className="p-3 bg-[#fdfbfc] rounded-md border border-neutral-200">
-        <div className="text-xs text-gray-700">
-          <p className="font-semibold mb-1 text-black space-y-1">Fonctionnalités sympatoche :</p>
-          <p>• Navigation intuitive avec les flèches ↑/↓ et sélection avec Enter</p>
-          <p>• Filtrage par catégorie et recherche textuelle</p>
-          <p>• Documentation détaillée et exemples d'utilisation</p>
-          <p>• Activation automatique pendant la frappe ou avec Ctrl+Space</p>
+      <div className="p-3 bg-white rounded-md shadow-bevel-xs">
+        <div className="flex flex-col gap-2 text-gray-15">
+          <p className="font-semibold text-sm">Fonctionnalités</p>
+            <ul className="space-y-1 list-disc pl-4 text-xs">
+            <li>Navigation intuitive avec les flèches ↑/↓ et sélection avec Enter</li>
+            <li>Filtrage par catégorie et recherche textuelle</li>
+            <li>Documentation détaillée et exemples d'utilisation</li>
+            <li>Activation automatique pendant la frappe ou avec Ctrl+Space</li>
+            </ul>
         </div>
       </div>
     </div>
