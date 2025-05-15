@@ -187,7 +187,7 @@ export function AutocompletionUI({
       )}
 
       {/* Conteneur principal */}
-      <div className="flex h-full overflow-auto w-full p-2 gap-1">
+      <div className="flex h-full overflow-auto w-full p-2 gap-2">
         {/* Liste des suggestions */}
         <div ref={listContainerRef} className={cn("w-full flex flex-col gap-1 overflow-y-auto no-scrollbar", filteredSuggestions.length > 0 ? "max-w-52" : "w-full")}>
           {filteredSuggestions.length > 0 ? (
