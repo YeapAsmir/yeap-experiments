@@ -145,7 +145,7 @@ export function AutocompletionUI({
       }}
     >
       {(showCategories || showSearchInput) && (
-        <div className={cn('flex gap-2 p-2 pb-0')}>
+        <div className={cn('p-2 pb-0')}>
           {showCategories && (
             <div className="flex overflow-x-auto gap-1">
               {[
