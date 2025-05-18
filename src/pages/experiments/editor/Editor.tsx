@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // Misc
 import React from "react";
 import CodeMirror from "@uiw/react-codemirror";
@@ -19,7 +20,7 @@ const getSuggestionsHeadless = (context: CompletionContext) => {
   // Rechercher les mots alphanumériques
   const word = context.matchBefore(/\w+/);
   // Rechercher les symboles (|, &, =, !, etc.)
-  const symbol = context.matchBefore(/[|&=!.+]+/);
+  const symbol = context.matchBefore(/[|&=!.+,]+/);
 
   // Si ni mot ni symbole n'est trouvé et que ce n'est pas explicite, ne rien retourner
   if (!word && !symbol && !context.explicit) return null;
@@ -181,12 +182,8 @@ export default function PayrollEditorCustomUI() {
 
   const setActiveSuggestion = useCallback(
     (suggestion: Completion | null) => {
-      if (suggestion && selectedSuggestion && suggestion.label === selectedSuggestion.label) {
-        setActiveDocumentation(getDocumentation(suggestion));
-      } else if (suggestion) {
-        setActiveDocumentation(getDocumentation(suggestion));
-      } else {
-        setActiveDocumentation(null);
+      if (suggestion) {
+        return getDocumentation(suggestion);
       }
     },
     [selectedSuggestion]
@@ -275,14 +272,14 @@ export default function PayrollEditorCustomUI() {
           // Activer les suggestions si:
           // 1. Il y a du texte avant le curseur (pour ne pas activer à une ligne vide)
           // 2. Le texte correspond à un motif alphanumérique ou un symbole spécial
-          if (lineText.length > 0 && (/\w+$/.test(lineText) || /[|&=!.+]+$/.test(lineText))) {
+          if (lineText.length > 0 && (/\w+$/.test(lineText) || /[|&=!.+,]+$/.test(lineText))) {
             shouldActivateCompletion = true;
           }
 
           // Vérifier également si un caractère vient d'être ajouté (comportement original)
           changes.iterChanges((fromA, toA, fromB, toB, inserted) => {
             const text = inserted.toString();
-            if (text.length === 1 && (/[a-zA-Z]/.test(text) || /[|&=!.+]/.test(text))) {
+            if (text.length === 1 && (/[a-zA-Z]/.test(text) || /[|&=!.+,]/.test(text))) {
               shouldActivateCompletion = true;
             }
           });

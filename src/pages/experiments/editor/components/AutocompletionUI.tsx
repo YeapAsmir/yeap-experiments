@@ -25,7 +25,7 @@ interface AutocompletionUIProps {
   applySuggestion: (suggestion: Completion) => void;
   suggestionsRef: React.RefObject<HTMLDivElement>;
   editorRef: React.RefObject<HTMLDivElement>;
-  onHoverSuggestion?: (suggestion: Completion | null) => void;
+  onHoverSuggestion?: (suggestion: Completion | null) => DocumentationInfo | void;
 }
 
 const SearchIcon = () => (
@@ -58,13 +58,11 @@ export function AutocompletionUI({
   applySuggestion,
   suggestionsRef,
   editorRef,
-  onHoverSuggestion = () => {}, // Fonction vide par défaut
+  onHoverSuggestion = () => {}
 }: AutocompletionUIProps) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [lastSelectionMethod, setLastSelectionMethod] = useState<"hover" | "keyboard">("keyboard");
-
+  const [hoveredSuggestion, setHoveredSuggestion] = useState<Completion | null>(null);
+  const [hoveredSuggestionDocumentation, setHoveredSuggestionDocumentation] = useState<DocumentationInfo | null>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
-
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -107,29 +105,20 @@ export function AutocompletionUI({
     };
   }, [suggestionsRef, editorRef, setCompletionInfo, setFilterText]);
 
-  const handleMouseEnter = (index: number) => {
-    setHoveredIndex(index);
-    setLastSelectionMethod("hover"); // Mise à jour de la méthode
-    onHoverSuggestion(filteredSuggestions[index]);
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredIndex(null);
-    // Ne réinitialise pas la documentation si une suggestion est sélectionnée
-    if (selectedSuggestion) {
-      onHoverSuggestion(selectedSuggestion);
-    } else {
-      onHoverSuggestion(null);
+  const handleMouseEnter = (suggestion: Completion) => {
+    setHoveredSuggestion(suggestion);
+    const doc = onHoverSuggestion?.(suggestion);
+    if (doc && 'description' in doc) {
+      setHoveredSuggestionDocumentation(doc);
     }
   };
-
-  // 3. Écouter les changements de sélection par clavier
-  useEffect(() => {
-    setLastSelectionMethod("keyboard");
-  }, [completionInfo.selected]);
+  const handleMouseLeave = () => {
+    setHoveredSuggestion(null);
+    onHoverSuggestion(null);
+  };
 
   if (!completionInfo.active || completionInfo.options.length === 0) return null;
-  const docSuggestion = hoveredIndex !== null ? filteredSuggestions[hoveredIndex] : selectedSuggestion;
+  const docSuggestion = selectedSuggestion; // Modifié pour toujours utiliser la suggestion sélectionnée
   return (
     <div
       ref={suggestionsRef}
@@ -189,7 +178,7 @@ export function AutocompletionUI({
       {/* Conteneur principal */}
       <div className="flex h-full overflow-auto w-full p-2 gap-2">
         {/* Liste des suggestions */}
-        <div ref={listContainerRef} className={cn("w-full flex flex-col gap-1 overflow-y-auto no-scrollbar", filteredSuggestions.length > 0 ? "max-w-52" : "w-full")}>
+        <div ref={listContainerRef} className={cn("flex shrink-0 flex-col gap-1 overflow-y-auto no-scrollbar", {"w-44": filteredSuggestions.length > 0})}>
           {filteredSuggestions.length > 0 ? (
             filteredSuggestions.map((suggestion, index) => (
                 <div
@@ -197,9 +186,9 @@ export function AutocompletionUI({
                   ref={(el) => {
                     itemRefs.current[index] = el;
                   }}
-                  className={`flex relative items-center p-2 rounded-sm cursor-pointer ${index === completionInfo.selected ? "bg-gray-7" : "hover:bg-gray-6"}`}
+                  className={`flex relative items-center p-2 rounded-sm cursor-pointer ${index === completionInfo.selected ? "bg-gray-5" : "hover:bg-gray-4"}`}
                   onClick={() => applySuggestion(suggestion)}
-                  onMouseEnter={() => handleMouseEnter(index)}
+                  onMouseEnter={() => handleMouseEnter(suggestion)}
                   onMouseLeave={handleMouseLeave}
                 >
                 {showIconForType && (
@@ -223,9 +212,6 @@ export function AutocompletionUI({
                   <span className="text-xs text-gray-15 font-mono">{suggestion.label}</span>
                   {showSuggestionDetail && <span className="text-xs text-gray-12 mt-2">{suggestion.detail}</span>}
                 </div>
-                {/* {index === completionInfo.selected && (
-                  <kbd className="absolute right-1 mx-0.5 text-gray-12 bg-white inline-flex h-5 max-h-full items-center rounded-sm border px-1 font-[inherit] text-[0.625rem] font-medium">Enter</kbd>
-                )} */}
               </div>
             ))
           ) : (
@@ -238,11 +224,21 @@ export function AutocompletionUI({
           {docSuggestion && (
             <div className="grow">
               <div className="p-2 overflow-y-auto flex flex-col gap-1 rounded-lg bg-gray-4">
-                <h3 className="text-sm font-mono font-semibold text-gray-15">{docSuggestion?.label}</h3>
-                {documentation ? (
-                  <p className="text-xs text-gray-12 leading-relaxed">
-                    {documentation.description}
-                  </p>
+                <h3 className="text-sm font-mono font-semibold text-gray-15">
+                  { hoveredSuggestion ? hoveredSuggestion.label : docSuggestion.label }
+                  </h3>
+                {hoveredSuggestion && hoveredSuggestionDocumentation ? (
+                  <>
+                    <p className="text-xs text-gray-12 leading-relaxed">
+                      {hoveredSuggestionDocumentation.description}
+                    </p>
+                  </>
+                ) : documentation ? (
+                  <>
+                    <p className="text-xs text-gray-12 leading-relaxed">
+                      {documentation.description}
+                    </p>
+                  </>
                 ) : (
                   <p className="text-xs text-gray-12 leading-relaxed">Aucune documentation disponible</p>
                 )}
