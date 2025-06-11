@@ -1,10 +1,17 @@
 // Misc
-import React, { useState } from "react";
-import { useRef, useEffect } from "react";
-import { cn } from "../../../../utils";
-import { CompletionState, DocumentationInfo } from "../types";
-import { getIconForType } from "../utils";
-import { Completion } from "@codemirror/autocomplete";
+import React              from 'react';
+import { cn }             from '../../../../utils';
+import {
+    CompletionState,
+    DocumentationInfo
+}                         from '../types';
+import { getIconForType } from '../utils';
+import { Completion }     from '@codemirror/autocomplete';
+import {
+    useRef,
+    useState,
+    useEffect
+}                         from 'react';
 
 interface AutocompletionUIProps {
   completionInfo: CompletionState;
@@ -14,7 +21,6 @@ interface AutocompletionUIProps {
   filteredSuggestions: Completion[];
   documentation: DocumentationInfo | null;
   selectedSuggestion: Completion | null;
-  showSearchInput?: boolean;
   showIconForType?: boolean;
   showCategories?: boolean;
   showInfoBar?: boolean;
@@ -47,7 +53,6 @@ export function AutocompletionUI({
   filteredSuggestions,
   documentation,
   selectedSuggestion,
-  showSearchInput = true,
   showCategories = true,
   showInfoBar = true,
   showSuggestionDetail = false,
@@ -133,9 +138,8 @@ export function AutocompletionUI({
         width: "auto",
       }}
     >
-      {(showCategories || showSearchInput) && (
+      {showCategories && (
         <div className={cn('p-2 pb-0')}>
-          {showCategories && (
             <div className="flex overflow-x-auto gap-1">
               {[
                 { id: "all", label: "All" },
@@ -156,22 +160,6 @@ export function AutocompletionUI({
                 </button>
               ))}
             </div>
-          )}
-
-          {showSearchInput && (
-            <div className="relative w-full">
-              <span className="absolute top-1/2 left-2 -translate-y-1/2 text-gray-12">
-                <SearchIcon />
-              </span>
-              <input
-                type="text"
-                placeholder="Searching in all"
-                className="w-full px-3 pl-8 placeholder:text-gray-13 py-1.5 h-7 text-sm rounded-sm bg-white focus:bg-gray-4 ring-0 focus:ring-2 ring-focus outline-none"
-                value={filterText}
-                onChange={(e) => setFilterText(e.target.value)}
-              />
-            </div>
-          )}
         </div>
       )}
 
@@ -186,7 +174,7 @@ export function AutocompletionUI({
                   ref={(el) => {
                     itemRefs.current[index] = el;
                   }}
-                  className={`flex relative items-center p-2 rounded-sm cursor-pointer ${index === completionInfo.selected ? "bg-gray-5" : "hover:bg-gray-4"}`}
+                  className={`flex relative items-center p-2 rounded-sm cursor-pointer ${index === completionInfo.selected ? "bg-gray-4" : "hover:bg-gray-4"}`}
                   onClick={() => applySuggestion(suggestion)}
                   onMouseEnter={() => handleMouseEnter(suggestion)}
                   onMouseLeave={handleMouseLeave}

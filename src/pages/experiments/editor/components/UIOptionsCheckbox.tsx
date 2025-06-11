@@ -13,7 +13,6 @@ import React from 'react';
  */
 export const UIOptionsCheckbox = ({
   showCategories,
-  showSearchInput,
   showSuggestionDetail,
   showIconForType,
   showInfoBar,
@@ -21,7 +20,6 @@ export const UIOptionsCheckbox = ({
 }) => {
   const options = [
     { id: 'showCategories', label: 'Afficher les catégories', checked: showCategories },
-    { id: 'showSearchInput', label: 'Afficher la barre de recherche', checked: showSearchInput },
     { id: 'showSuggestionDetail', label: 'Afficher les détails des suggestions', checked: showSuggestionDetail },
     { id: 'showIconForType', label: 'Afficher les icônes des types', checked: showIconForType },
     { id: 'showInfoBar', label: 'Afficher la barre d\'informations', checked: showInfoBar }

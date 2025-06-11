@@ -1,20 +1,50 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 // Misc
-import React from "react";
-import CodeMirror from "@uiw/react-codemirror";
-import { useRef, useMemo, useState, useEffect, useCallback } from "react";
-import { AutocompletionUI } from "./components/AutocompletionUI";
-import { CompletionState, DocumentationInfo } from "./types";
-import { allSuggestions, getDocumentation } from "./utils";
-import { Completion, closeBrackets, autocompletion, completionStatus, CompletionContext } from "@codemirror/autocomplete";
-import { history, defaultKeymap, historyKeymap, indentWithTab } from "@codemirror/commands";
-import { javascript } from "@codemirror/lang-javascript";
-import { indentOnInput, bracketMatching } from "@codemirror/language";
-import { StateField } from "@codemirror/state";
-import { keymap, EditorView, ViewPlugin, lineNumbers } from "@codemirror/view";
-import { useHotkeys } from "react-hotkeys-hook";
-import { ayuLight } from "thememirror";
-import UIOptionsCheckbox from "./components/UIOptionsCheckbox";
+import UIOptionsCheckbox    from './components/UIOptionsCheckbox';
+import CodeMirror           from '@uiw/react-codemirror';
+import React                from 'react';
+import { AutocompletionUI } from './components/AutocompletionUI';
+import {
+    CompletionState,
+    DocumentationInfo
+}                           from './types';
+import {
+    allSuggestions,
+    getDocumentation
+}                           from './utils';
+import {
+    Completion,
+    closeBrackets,
+    autocompletion,
+    completionStatus,
+    CompletionContext
+}                           from '@codemirror/autocomplete';
+import {
+    history,
+    defaultKeymap,
+    historyKeymap,
+    indentWithTab
+}                           from '@codemirror/commands';
+import { javascript }       from '@codemirror/lang-javascript';
+import {
+    indentOnInput,
+    bracketMatching
+}                           from '@codemirror/language';
+import { StateField }       from '@codemirror/state';
+import {
+    keymap,
+    EditorView,
+    ViewPlugin,
+    lineNumbers
+}                           from '@codemirror/view';
+import {
+    useRef,
+    useMemo,
+    useState,
+    useEffect,
+    useCallback
+}                           from 'react';
+import { useHotkeys }       from 'react-hotkeys-hook';
+import { ayuLight }         from 'thememirror';
 
 const getSuggestionsHeadless = (context: CompletionContext) => {
   // Rechercher les mots alphanumériques
@@ -91,7 +121,6 @@ export default function PayrollEditorCustomUI() {
   const [filterText, setFilterText] = useState("");
   const [uiOptions, setUiOptions] = useState({
     showCategories: false,
-    showSearchInput: false,
     showSuggestionDetail: false,
     showIconForType: false,
     showInfoBar: true,
@@ -426,7 +455,6 @@ export default function PayrollEditorCustomUI() {
           selectedSuggestion={selectedSuggestion}
           // Utilisation des options UI dynamiques
           showCategories={uiOptions.showCategories}
-          showSearchInput={uiOptions.showSearchInput}
           showSuggestionDetail={uiOptions.showSuggestionDetail}
           showIconForType={uiOptions.showIconForType}
           showInfoBar={uiOptions.showInfoBar}
